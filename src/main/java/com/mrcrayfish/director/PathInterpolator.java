@@ -27,8 +27,8 @@ public class PathInterpolator
         PathPoint p4 = this.getPoint(index + 2);
         boolean startEnd = index == 0 || index == this.points.size() - 1;
         boolean nextPointEnd = index + 1 == this.points.size() - 1;
-        Vec3d outControl = startEnd ? Vec3d.ZERO : new Vec3d(p3.getX() - p1.getX(), p3.getY() - p1.getY(), p3.getZ() - p1.getZ()).normalize().scale(distance(p2, p3));
-        Vec3d inControl = nextPointEnd ? Vec3d.ZERO : new Vec3d(p4.getX() - p2.getX(), p4.getY() - p2.getY(), p4.getZ() - p2.getZ()).normalize().scale(distance(p2, p3));
+        Vec3d outControl = startEnd ? Vec3d.ZERO : new Vec3d(p3.getX() - p1.getX(), p3.getY() - p1.getY(), p3.getZ() - p1.getZ()).normalize().scale(distance(p2, p3) * 2);
+        Vec3d inControl = nextPointEnd ? Vec3d.ZERO : new Vec3d(p4.getX() - p2.getX(), p4.getY() - p2.getY(), p4.getZ() - p2.getZ()).normalize().scale(distance(p2, p3) * 2);
         double pX = point(p2.getX(), p3.getX(), outControl.x, inControl.x, progress);
         double pY = point(p2.getY(), p3.getY(), outControl.y, inControl.y, progress);
         double pZ = point(p2.getZ(), p3.getZ(), outControl.z, inControl.z, progress);
@@ -46,11 +46,6 @@ public class PathInterpolator
     public PathPoint getPoint(int index)
     {
         return this.points.get(MathHelper.clamp(index, 0, this.points.size() - 1));
-    }
-
-    public int getSize()
-    {
-        return this.points.size();
     }
 
     private double point(double p1, double p2, double t1, double t2, double s)
