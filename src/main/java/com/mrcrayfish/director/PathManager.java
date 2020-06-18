@@ -49,6 +49,9 @@ public class PathManager
 
     private PathManager() {}
 
+    /**
+     * Plays the current path
+     */
     public void play()
     {
         if(this.points.size() < 2)
@@ -63,9 +66,43 @@ public class PathManager
         this.playing = true;
     }
 
+    /**
+     * Stops playing the current path
+     */
     public void stop()
     {
         this.playing = false;
+    }
+
+    /**
+     *
+     */
+    private void updateDuration()
+    {
+        if(this.points.size() > 1)
+        {
+            double[] pathLengths = new double[this.points.size() - 1];
+            double totalLength = 0;
+            int segmentsPerPoint = 50;
+            for(int i = 0; i < this.points.size() - 1; i++)
+            {
+                double pathLength = 0;
+                for(int j = 0; j < segmentsPerPoint; j++)
+                {
+                    float chunk = 1.0F / segmentsPerPoint;
+                    float progress = (float) j / (float) segmentsPerPoint;
+                    Vec3d p1 = this.interpolator.get(i, progress);
+                    Vec3d p2 = this.interpolator.get(i, progress + chunk);
+                    pathLength += p1.distanceTo(p2);
+                }
+                pathLengths[i] = pathLength;
+                totalLength += pathLength;
+            }
+            for(int i = 0; i < this.points.size() - 1; i++)
+            {
+                this.points.get(i).setDuration((int) (duration * (pathLengths[i] / totalLength) + 0.5));
+            }
+        }
     }
 
     @SubscribeEvent
@@ -77,7 +114,8 @@ public class PathManager
             if(event.getKey() == GLFW.GLFW_KEY_P) //Add new point
             {
                 this.points.add(new PathPoint(mc.player));
-                this.interpolator = new PathInterpolator(this.points, this.duration);
+                this.interpolator = new PathInterpolator(this.points);
+                this.updateDuration();
                 mc.player.sendMessage(new StringTextComponent("Added new point!"));
             }
             if(event.getKey() == GLFW.GLFW_KEY_BACKSLASH) //Reset roll
@@ -125,6 +163,10 @@ public class PathManager
                         this.stop();
                     }
                 }
+            }
+            else
+            {
+                this.stop();
             }
         }
         else

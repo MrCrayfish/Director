@@ -15,6 +15,7 @@ public class PathPoint
     private double pitch;
     private double roll;
     private double fov;
+
     private int duration;
 
     public PathPoint(PlayerEntity player)
