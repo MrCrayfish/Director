@@ -4,15 +4,11 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Matrix4f;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.RenderTypeBuffers;
 import net.minecraft.client.renderer.RenderTypeLookup;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.model.ItemCameraTransforms;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.Vec3d;
@@ -23,7 +19,6 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,10 +40,11 @@ public class PathManager
     }
 
     private List<PathPoint> points = new ArrayList<>();
-    private HermiteInterpolator interpolator;
+    private PathInterpolator interpolator;
     private int currentPointIndex;
     private int remainingPointDuration;
     private boolean playing;
+    private int duration = 100;
     private double roll;
 
     private PathManager() {}
@@ -81,7 +77,7 @@ public class PathManager
             if(event.getKey() == GLFW.GLFW_KEY_P) //Add new point
             {
                 this.points.add(new PathPoint(mc.player));
-                this.interpolator = new HermiteInterpolator(this.points);
+                this.interpolator = new PathInterpolator(this.points, this.duration);
                 mc.player.sendMessage(new StringTextComponent("Added new point!"));
             }
             if(event.getKey() == GLFW.GLFW_KEY_BACKSLASH) //Reset roll
@@ -117,17 +113,17 @@ public class PathManager
             if(this.remainingPointDuration > 0)
             {
                 this.remainingPointDuration--;
-            }
-            else
-            {
-                if(this.currentPointIndex < this.points.size() - 1)
+                if(this.remainingPointDuration <= 0)
                 {
-                    this.currentPointIndex++;
-                    this.remainingPointDuration = this.points.get(this.currentPointIndex).getDuration() - 1;
-                }
-                else
-                {
-                    this.stop();
+                    if(this.currentPointIndex < this.points.size() - 1)
+                    {
+                        this.currentPointIndex++;
+                        this.remainingPointDuration = this.points.get(this.currentPointIndex).getDuration();
+                    }
+                    else
+                    {
+                        this.stop();
+                    }
                 }
             }
         }

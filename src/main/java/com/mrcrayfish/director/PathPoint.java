@@ -15,7 +15,7 @@ public class PathPoint
     private double pitch;
     private double roll;
     private double fov;
-    private int duration = 20;
+    private int duration;
 
     public PathPoint(PlayerEntity player)
     {
@@ -65,7 +65,7 @@ public class PathPoint
 
     public int getDuration()
     {
-        return duration;
+        return this.duration;
     }
 
     public void setDuration(int duration)
