@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.renderer.model.ItemCameraTransforms;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
@@ -46,8 +47,19 @@ public class PathManager
     private boolean playing;
     private int duration = 100;
     private double roll;
+    private double fov;
 
     private PathManager() {}
+
+    public double getRoll()
+    {
+        return this.roll;
+    }
+
+    public double getFov()
+    {
+        return this.fov;
+    }
 
     /**
      * Plays the current path
@@ -113,7 +125,7 @@ public class PathManager
         {
             if(event.getKey() == GLFW.GLFW_KEY_P) //Add new point
             {
-                this.points.add(new PathPoint(mc.player));
+                this.points.add(new PathPoint(mc.player, this));
                 this.interpolator = new PathInterpolator(this.points);
                 this.updateDuration();
                 mc.player.sendMessage(new StringTextComponent("Added new point!"));
@@ -180,6 +192,14 @@ public class PathManager
             {
                 this.roll += 0.5;
             }
+            else if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_EQUAL) == GLFW.GLFW_PRESS)
+            {
+                this.fov += 1;
+            }
+            else if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_MINUS) == GLFW.GLFW_PRESS)
+            {
+                this.fov -= 0.5;
+            }
         }
     }
 
@@ -188,21 +208,55 @@ public class PathManager
     {
         if(this.playing && this.currentPointIndex < this.points.size() - 1)
         {
-            PathPoint currentPoint = this.points.get(this.currentPointIndex);
-            float progress = 1.0F - ((float) this.remainingPointDuration - event.renderTickTime) / (float) currentPoint.getDuration();
+            PathPoint p1 = this.points.get(this.currentPointIndex);
+            PathPoint p2 = this.points.get(this.currentPointIndex + 1);
+            float progress = 1.0F - ((float) this.remainingPointDuration - event.renderTickTime) / (float) p1.getDuration();
             Vec3d pos = this.interpolator.get(this.currentPointIndex, progress);
             ClientPlayerEntity player = Minecraft.getInstance().player;
             player.setPosition(pos.x, pos.y, pos.z);
             player.prevPosX = pos.x;
             player.prevPosY = pos.y;
             player.prevPosZ = pos.z;
+            player.rotationPitch = (float) (p1.getPitch() + (p2.getPitch() - p1.getPitch()) * progress);
+            player.prevRotationPitch = player.rotationPitch;
+            float yawDistance = MathHelper.wrapSubtractDegrees((float) p1.getYaw(), (float) p2.getYaw());
+            player.rotationYaw = (float) (p1.getYaw() + yawDistance * progress);
+            player.prevRotationYaw = player.rotationYaw;
         }
     }
 
     @SubscribeEvent
     public void camera(EntityViewRenderEvent.CameraSetup event)
     {
-        event.setRoll((float) this.roll);
+        if(this.playing && this.currentPointIndex < this.points.size() - 1)
+        {
+            PathPoint p1 = this.points.get(this.currentPointIndex);
+            PathPoint p2 = this.points.get(this.currentPointIndex + 1);
+            float progress = 1.0F - ((float) this.remainingPointDuration - (float) event.getRenderPartialTicks()) / (float) p1.getDuration();
+            float roll = (float) (p1.getRoll() + (p2.getRoll() - p1.getRoll()) * progress);
+            event.setRoll(roll);
+        }
+        else
+        {
+            event.setRoll((float) this.roll);
+        }
+    }
+
+    @SubscribeEvent
+    public void fov(EntityViewRenderEvent.FOVModifier event)
+    {
+        if(this.playing && this.currentPointIndex < this.points.size() - 1)
+        {
+            PathPoint p1 = this.points.get(this.currentPointIndex);
+            PathPoint p2 = this.points.get(this.currentPointIndex + 1);
+            float progress = 1.0F - ((float) this.remainingPointDuration - (float) event.getRenderPartialTicks()) / (float) p1.getDuration();
+            double fov = p1.getFov() + (p2.getFov() - p1.getFov()) * progress;
+            event.setFOV(fov);
+        }
+        else
+        {
+            event.setFOV(Minecraft.getInstance().gameSettings.fov + this.fov);
+        }
     }
 
     @SubscribeEvent

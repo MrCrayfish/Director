@@ -18,15 +18,15 @@ public class PathPoint
 
     private int duration;
 
-    public PathPoint(PlayerEntity player)
+    public PathPoint(PlayerEntity player, PathManager manager)
     {
         this.x = player.getPosX();
         this.y = player.getPosY();
         this.z = player.getPosZ();
         this.yaw = player.rotationYaw;
         this.pitch = player.rotationPitch;
-        this.roll = 0;
-        this.fov = Minecraft.getInstance().gameSettings.fov; //TODO change to something else
+        this.roll = manager.getRoll();
+        this.fov = Minecraft.getInstance().gameSettings.fov + manager.getFov();
     }
 
     public double getX()
