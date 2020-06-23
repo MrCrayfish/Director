@@ -1,5 +1,6 @@
 package com.mrcrayfish.director;
 
+import com.mrcrayfish.director.path.PathManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 

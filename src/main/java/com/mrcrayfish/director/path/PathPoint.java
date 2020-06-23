@@ -1,4 +1,4 @@
-package com.mrcrayfish.director;
+package com.mrcrayfish.director.path;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
@@ -16,6 +16,7 @@ public class PathPoint
     private double roll;
     private double fov;
 
+    private double length;
     private int duration;
 
     public PathPoint(PlayerEntity player, PathManager manager)
@@ -62,6 +63,16 @@ public class PathPoint
     public double getFov()
     {
         return this.fov;
+    }
+
+    public double getLength()
+    {
+        return length;
+    }
+
+    public void setLength(double length)
+    {
+        this.length = length;
     }
 
     public int getDuration()

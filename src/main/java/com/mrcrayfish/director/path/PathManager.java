@@ -1,7 +1,9 @@
-package com.mrcrayfish.director;
+package com.mrcrayfish.director.path;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mrcrayfish.director.path.interpolator.AbstractInterpolator;
+import com.mrcrayfish.director.path.interpolator.SmoothInterpolator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -41,11 +43,11 @@ public class PathManager
     }
 
     private List<PathPoint> points = new ArrayList<>();
-    private PathInterpolator interpolator;
+    private AbstractInterpolator interpolator;
     private int currentPointIndex;
     private int remainingPointDuration;
     private boolean playing;
-    private int duration = 100;
+    private int duration = 1000;
     private double roll;
     private double fov;
 
@@ -66,6 +68,8 @@ public class PathManager
      */
     public void play()
     {
+        this.duration = 200;
+        this.updateDuration();
         if(this.points.size() < 2)
         {
             Minecraft.getInstance().player.sendMessage(new StringTextComponent("You need at least 2 points to play the path"));
@@ -84,6 +88,11 @@ public class PathManager
     public void stop()
     {
         this.playing = false;
+    }
+
+    private boolean isPlaying()
+    {
+        return this.playing && this.currentPointIndex < this.points.size() - 1;
     }
 
     /**
@@ -109,6 +118,7 @@ public class PathManager
                 }
                 pathLengths[i] = pathLength;
                 totalLength += pathLength;
+                this.points.get(i).setLength(pathLength);
             }
             for(int i = 0; i < this.points.size() - 1; i++)
             {
@@ -126,7 +136,7 @@ public class PathManager
             if(event.getKey() == GLFW.GLFW_KEY_P) //Add new point
             {
                 this.points.add(new PathPoint(mc.player, this));
-                this.interpolator = new PathInterpolator(this.points);
+                this.interpolator = new SmoothInterpolator(this.points);
                 this.updateDuration();
                 mc.player.sendMessage(new StringTextComponent("Added new point!"));
             }
@@ -155,7 +165,7 @@ public class PathManager
     @SubscribeEvent
     public void tick(TickEvent.ClientTickEvent event)
     {
-        if(event.phase != TickEvent.Phase.END)
+        if(event.phase != TickEvent.Phase.START)
             return;
 
         if(this.playing)
@@ -187,10 +197,12 @@ public class PathManager
             if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_LEFT_BRACKET) == GLFW.GLFW_PRESS)
             {
                 this.roll -= 0.5;
+                Minecraft.getInstance().player.sendMessage(new StringTextComponent("Roll:" + this.roll));
             }
             else if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_RIGHT_BRACKET) == GLFW.GLFW_PRESS)
             {
                 this.roll += 0.5;
+                Minecraft.getInstance().player.sendMessage(new StringTextComponent("Roll:" + this.roll));
             }
             else if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_EQUAL) == GLFW.GLFW_PRESS)
             {
@@ -206,7 +218,7 @@ public class PathManager
     @SubscribeEvent
     public void render(TickEvent.RenderTickEvent event)
     {
-        if(this.playing && this.currentPointIndex < this.points.size() - 1)
+        if(this.isPlaying())
         {
             PathPoint p1 = this.points.get(this.currentPointIndex);
             PathPoint p2 = this.points.get(this.currentPointIndex + 1);
@@ -217,10 +229,11 @@ public class PathManager
             player.prevPosX = pos.x;
             player.prevPosY = pos.y;
             player.prevPosZ = pos.z;
-            player.rotationPitch = (float) (p1.getPitch() + (p2.getPitch() - p1.getPitch()) * progress);
+            double d = this.interpolator.distance(this.currentPointIndex, progress) / p1.getLength();
+            player.rotationPitch = (float) (p1.getPitch() + (p2.getPitch() - p1.getPitch()) * d);
             player.prevRotationPitch = player.rotationPitch;
             float yawDistance = MathHelper.wrapSubtractDegrees((float) p1.getYaw(), (float) p2.getYaw());
-            player.rotationYaw = (float) (p1.getYaw() + yawDistance * progress);
+            player.rotationYaw = (float) (p1.getYaw() + yawDistance * d);
             player.prevRotationYaw = player.rotationYaw;
         }
     }
@@ -228,12 +241,13 @@ public class PathManager
     @SubscribeEvent
     public void camera(EntityViewRenderEvent.CameraSetup event)
     {
-        if(this.playing && this.currentPointIndex < this.points.size() - 1)
+        if(this.isPlaying())
         {
             PathPoint p1 = this.points.get(this.currentPointIndex);
             PathPoint p2 = this.points.get(this.currentPointIndex + 1);
             float progress = 1.0F - ((float) this.remainingPointDuration - (float) event.getRenderPartialTicks()) / (float) p1.getDuration();
-            float roll = (float) (p1.getRoll() + (p2.getRoll() - p1.getRoll()) * progress);
+            double distance = this.interpolator.distance(this.currentPointIndex, progress) / p1.getLength();
+            float roll = (float) (p1.getRoll() + (p2.getRoll() - p1.getRoll()) * distance);
             event.setRoll(roll);
         }
         else
@@ -245,12 +259,13 @@ public class PathManager
     @SubscribeEvent
     public void fov(EntityViewRenderEvent.FOVModifier event)
     {
-        if(this.playing && this.currentPointIndex < this.points.size() - 1)
+        if(this.isPlaying())
         {
             PathPoint p1 = this.points.get(this.currentPointIndex);
             PathPoint p2 = this.points.get(this.currentPointIndex + 1);
             float progress = 1.0F - ((float) this.remainingPointDuration - (float) event.getRenderPartialTicks()) / (float) p1.getDuration();
-            double fov = p1.getFov() + (p2.getFov() - p1.getFov()) * progress;
+            double distance = this.interpolator.distance(this.currentPointIndex, progress) / p1.getLength();
+            double fov = p1.getFov() + (p2.getFov() - p1.getFov()) * distance;
             event.setFOV(fov);
         }
         else
@@ -262,6 +277,11 @@ public class PathManager
     @SubscribeEvent
     public void renderWorld(RenderWorldLastEvent event)
     {
+        if(this.isPlaying())
+        {
+            return;
+        }
+
         MatrixStack matrixStack = event.getMatrixStack();
         matrixStack.push();
 
@@ -294,11 +314,17 @@ public class PathManager
             PathPoint p1 = this.points.get(i);
             matrixStack.push();
             matrixStack.translate(p1.getX(), p1.getY(), p1.getZ());
+            matrixStack.scale(0.5F, 0.5F, 0.5F);
             Minecraft.getInstance().getItemRenderer().renderItem(snowball, ItemCameraTransforms.TransformType.GROUND, 0, 0, matrixStack, renderTypeBuffer);
             matrixStack.pop();
         }
         Minecraft.getInstance().getRenderTypeBuffers().getBufferSource().finish(renderType);
 
         matrixStack.pop();
+    }
+
+    private double easeInOut(double t)
+    {
+        return (t * t) / (2.0 * (t * t - t) + 1.0);
     }
 }
