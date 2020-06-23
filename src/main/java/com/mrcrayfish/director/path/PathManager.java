@@ -9,10 +9,8 @@ import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Matrix4f;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.RenderTypeLookup;
-import net.minecraft.client.renderer.model.ItemCameraTransforms;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.StringTextComponent;
@@ -31,6 +29,10 @@ import java.util.List;
  */
 public class PathManager
 {
+    private static final float[] START_POINT_COLOR = { 1.0F, 0.18F, 0.0F };
+    private static final float[] POINT_COLOR = { 1.0F, 0.815F, 0.0F };
+    private static final float[] END_POINT_COLOR = { 0.549F, 1.0F, 0.0F };
+
     private static PathManager instance;
 
     public static PathManager get()
@@ -112,8 +114,8 @@ public class PathManager
                 {
                     float chunk = 1.0F / segmentsPerPoint;
                     float progress = (float) j / (float) segmentsPerPoint;
-                    Vec3d p1 = this.interpolator.get(i, progress);
-                    Vec3d p2 = this.interpolator.get(i, progress + chunk);
+                    Vec3d p1 = this.interpolator.pos(i, progress);
+                    Vec3d p2 = this.interpolator.pos(i, progress + chunk);
                     pathLength += p1.distanceTo(p2);
                 }
                 pathLengths[i] = pathLength;
@@ -220,21 +222,28 @@ public class PathManager
     {
         if(this.isPlaying())
         {
+            /* Calculate the current progress between two points based on the remaining time */
             PathPoint p1 = this.points.get(this.currentPointIndex);
             PathPoint p2 = this.points.get(this.currentPointIndex + 1);
             float progress = 1.0F - ((float) this.remainingPointDuration - event.renderTickTime) / (float) p1.getDuration();
-            Vec3d pos = this.interpolator.get(this.currentPointIndex, progress);
+
+            /* Updated the position of the player */
+            Vec3d pos = this.interpolator.pos(this.currentPointIndex, progress);
             ClientPlayerEntity player = Minecraft.getInstance().player;
             player.setPosition(pos.x, pos.y, pos.z);
             player.prevPosX = pos.x;
             player.prevPosY = pos.y;
             player.prevPosZ = pos.z;
-            double d = this.interpolator.distance(this.currentPointIndex, progress) / p1.getLength();
-            player.rotationPitch = (float) (p1.getPitch() + (p2.getPitch() - p1.getPitch()) * d);
-            player.prevRotationPitch = player.rotationPitch;
-            float yawDistance = MathHelper.wrapSubtractDegrees((float) p1.getYaw(), (float) p2.getYaw());
-            player.rotationYaw = (float) (p1.getYaw() + yawDistance * d);
-            player.prevRotationYaw = player.rotationYaw;
+
+            /* Updated the pitch of the player */
+            float pitch = this.interpolator.pitch(this.currentPointIndex, progress);
+            player.rotationPitch = pitch;
+            player.prevRotationPitch = pitch;
+
+            /* Updated the yaw of the player */
+            float yaw = this.interpolator.yaw(this.currentPointIndex, progress);
+            player.rotationYaw = yaw;
+            player.prevRotationYaw = yaw;
         }
     }
 
@@ -244,10 +253,8 @@ public class PathManager
         if(this.isPlaying())
         {
             PathPoint p1 = this.points.get(this.currentPointIndex);
-            PathPoint p2 = this.points.get(this.currentPointIndex + 1);
             float progress = 1.0F - ((float) this.remainingPointDuration - (float) event.getRenderPartialTicks()) / (float) p1.getDuration();
-            double distance = this.interpolator.distance(this.currentPointIndex, progress) / p1.getLength();
-            float roll = (float) (p1.getRoll() + (p2.getRoll() - p1.getRoll()) * distance);
+            float roll = this.interpolator.roll(this.currentPointIndex, progress);
             event.setRoll(roll);
         }
         else
@@ -262,10 +269,8 @@ public class PathManager
         if(this.isPlaying())
         {
             PathPoint p1 = this.points.get(this.currentPointIndex);
-            PathPoint p2 = this.points.get(this.currentPointIndex + 1);
             float progress = 1.0F - ((float) this.remainingPointDuration - (float) event.getRenderPartialTicks()) / (float) p1.getDuration();
-            double distance = this.interpolator.distance(this.currentPointIndex, progress) / p1.getLength();
-            double fov = p1.getFov() + (p2.getFov() - p1.getFov()) * distance;
+            double fov = this.interpolator.fov(this.currentPointIndex, progress);
             event.setFOV(fov);
         }
         else
@@ -299,32 +304,39 @@ public class PathManager
             {
                 float segment = 1.0F / p1.getDuration();
                 float progress = j * segment;
-                Vec3d v1 = this.interpolator.get(i, progress);
-                Vec3d v2 = this.interpolator.get(i, progress + segment);
-                builder.pos(lastMatrix, (float) v1.getX(), (float) v1.getY(), (float) v1.getZ()).color(1.0F, 0.0F, 0.0F, 1.0F).endVertex();
-                builder.pos(lastMatrix, (float) v2.getX(), (float) v2.getY(), (float) v2.getZ()).color(1.0F, 0.0F, 0.0F, 1.0F).endVertex();
+                Vec3d v1 = this.interpolator.pos(i, progress);
+                Vec3d v2 = this.interpolator.pos(i, progress + segment);
+                builder.pos(lastMatrix, (float) v1.getX(), (float) v1.getY(), (float) v1.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
+                builder.pos(lastMatrix, (float) v2.getX(), (float) v2.getY(), (float) v2.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
             }
         }
-        Minecraft.getInstance().getRenderTypeBuffers().getBufferSource().finish(RenderType.getLines());
 
-        ItemStack snowball = new ItemStack(Items.SNOWBALL);
-        RenderType renderType = RenderTypeLookup.getRenderType(snowball);
+        AxisAlignedBB pathBox = new AxisAlignedBB(-0.25, -0.25, -0.25, 0.25, 0.25, 0.25);
         for(int i = 0; i < this.points.size(); i++)
         {
             PathPoint p1 = this.points.get(i);
             matrixStack.push();
             matrixStack.translate(p1.getX(), p1.getY(), p1.getZ());
             matrixStack.scale(0.5F, 0.5F, 0.5F);
-            Minecraft.getInstance().getItemRenderer().renderItem(snowball, ItemCameraTransforms.TransformType.GROUND, 0, 0, matrixStack, renderTypeBuffer);
+            float[] color = this.getPointColor(i);
+            WorldRenderer.drawBoundingBox(matrixStack, builder, pathBox, color[0], color[1], color[2], 1.0F);
             matrixStack.pop();
         }
-        Minecraft.getInstance().getRenderTypeBuffers().getBufferSource().finish(renderType);
+        Minecraft.getInstance().getRenderTypeBuffers().getBufferSource().finish(RenderType.getLines());
 
         matrixStack.pop();
     }
 
-    private double easeInOut(double t)
+    private float[] getPointColor(int index)
     {
-        return (t * t) / (2.0 * (t * t - t) + 1.0);
+        if(index == 0)
+        {
+            return START_POINT_COLOR;
+        }
+        else if(index == this.points.size() - 1)
+        {
+            return END_POINT_COLOR;
+        }
+        return POINT_COLOR;
     }
 }
