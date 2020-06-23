@@ -14,6 +14,9 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextComponent;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -70,7 +73,7 @@ public class PathManager
      */
     public void play()
     {
-        this.duration = 200;
+        this.duration = 100;
         this.updateDuration();
         if(this.points.size() < 2)
         {
@@ -140,12 +143,17 @@ public class PathManager
                 this.points.add(new PathPoint(mc.player, this));
                 this.interpolator = new SmoothInterpolator(this.points);
                 this.updateDuration();
-                mc.player.sendMessage(new StringTextComponent("Added new point!"));
+                this.showMessage("Added a new waypoint!");
             }
             if(event.getKey() == GLFW.GLFW_KEY_BACKSLASH) //Reset roll
             {
                 this.roll = 0;
-                mc.player.sendMessage(new StringTextComponent("Reset roll"));
+                this.showMessage("Reset Roll");
+            }
+            if(event.getKey() == GLFW.GLFW_KEY_0) //Reset fov
+            {
+                this.fov = 0;
+                this.showMessage("Reset FOV");
             }
             if(event.getKey() == GLFW.GLFW_KEY_I)
             {
@@ -160,6 +168,7 @@ public class PathManager
                 this.stop();
                 this.points.clear();
                 this.interpolator = null;
+                this.showMessage("Waypoints cleared!");
             }
         }
     }
@@ -199,22 +208,34 @@ public class PathManager
             if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_LEFT_BRACKET) == GLFW.GLFW_PRESS)
             {
                 this.roll -= 0.5;
-                Minecraft.getInstance().player.sendMessage(new StringTextComponent("Roll:" + this.roll));
+                this.showValue("Roll", String.valueOf(this.roll));
             }
             else if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_RIGHT_BRACKET) == GLFW.GLFW_PRESS)
             {
                 this.roll += 0.5;
-                Minecraft.getInstance().player.sendMessage(new StringTextComponent("Roll:" + this.roll));
+                this.showValue("Roll", String.valueOf(this.roll));
             }
             else if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_EQUAL) == GLFW.GLFW_PRESS)
             {
                 this.fov += 1;
+                this.showValue("FOV", String.valueOf(Minecraft.getInstance().gameSettings.fov + this.fov));
             }
             else if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_MINUS) == GLFW.GLFW_PRESS)
             {
-                this.fov -= 0.5;
+                this.fov -= 1;
+                this.showValue("FOV", String.valueOf(Minecraft.getInstance().gameSettings.fov + this.fov));
             }
         }
+    }
+
+    private void showMessage(String message)
+    {
+        Minecraft.getInstance().player.sendStatusMessage(new TranslationTextComponent("director.format.message", message), true);
+    }
+
+    private void showValue(String name, String value)
+    {
+        Minecraft.getInstance().player.sendStatusMessage(new TranslationTextComponent("director.format.value", name, value), true);
     }
 
     @SubscribeEvent
