@@ -246,30 +246,6 @@ public class PathManager
                 this.stop();
             }
         }
-        else
-        {
-            long windowId = Minecraft.getInstance().getMainWindow().getHandle();
-            if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_LEFT_BRACKET) == GLFW.GLFW_PRESS)
-            {
-                this.roll -= 0.5;
-                this.showValue("Roll", String.valueOf(this.roll));
-            }
-            else if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_RIGHT_BRACKET) == GLFW.GLFW_PRESS)
-            {
-                this.roll += 0.5;
-                this.showValue("Roll", String.valueOf(this.roll));
-            }
-            else if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_EQUAL) == GLFW.GLFW_PRESS)
-            {
-                this.fov += 1;
-                this.showValue("FOV", String.valueOf(Minecraft.getInstance().gameSettings.fov + this.fov));
-            }
-            else if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_MINUS) == GLFW.GLFW_PRESS)
-            {
-                this.fov -= 1;
-                this.showValue("FOV", String.valueOf(Minecraft.getInstance().gameSettings.fov + this.fov));
-            }
-        }
     }
 
     private void showMessage(String message)
@@ -411,6 +387,24 @@ public class PathManager
             return END_POINT_COLOR;
         }
         return POINT_COLOR;
+    }
+
+    @SubscribeEvent
+    public void onMouseScroll(InputEvent.MouseScrollEvent event)
+    {
+        long windowId = Minecraft.getInstance().getMainWindow().getHandle();
+        if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS)
+        {
+            this.fov -= 0.5 * event.getScrollDelta();
+            this.showValue("FOV", String.valueOf(this.fov));
+            event.setCanceled(true);
+        }
+        else if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_LEFT_ALT) == GLFW.GLFW_PRESS)
+        {
+            this.roll += 0.5 * event.getScrollDelta();
+            this.showValue("Roll", String.valueOf(this.roll));
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent
