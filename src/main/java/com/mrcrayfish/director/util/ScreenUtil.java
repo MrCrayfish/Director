@@ -66,4 +66,9 @@ public class ScreenUtil
         buffer.pos(x, y, 0).tex(u * uScale, v * vScale).endVertex();
         tessellator.draw();
     }
+
+    public static boolean isMouseWithin(int mouseX, int mouseY, int x, int y, int width, int height)
+    {
+        return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
+    }
 }

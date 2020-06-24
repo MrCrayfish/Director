@@ -104,9 +104,15 @@ public class PathManager
         this.playing = false;
     }
 
-    private boolean isPlaying()
+    public boolean isPlaying()
     {
         return this.playing && this.currentPointIndex < this.points.size() - 1;
+    }
+
+    public void delete(PathPoint point)
+    {
+        this.points.remove(point);
+        this.updateDuration();
     }
 
     /**
