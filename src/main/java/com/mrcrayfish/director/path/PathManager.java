@@ -4,37 +4,40 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.mrcrayfish.director.path.interpolator.AbstractInterpolator;
 import com.mrcrayfish.director.path.interpolator.SmoothInterpolator;
+import com.mrcrayfish.director.screen.EditPointScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Matrix4f;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextComponent;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.glfw.GLFW;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Author: MrCrayfish
  */
 public class PathManager
 {
-    private static final float[] START_POINT_COLOR = { 1.0F, 0.18F, 0.0F };
-    private static final float[] POINT_COLOR = { 1.0F, 0.815F, 0.0F };
-    private static final float[] END_POINT_COLOR = { 0.549F, 1.0F, 0.0F };
+    private static final float[] START_POINT_COLOR = {1.0F, 0.18F, 0.0F};
+    private static final float[] POINT_COLOR = {1.0F, 0.815F, 0.0F};
+    private static final float[] END_POINT_COLOR = {0.549F, 1.0F, 0.0F};
 
     private static PathManager instance;
 
@@ -52,14 +55,16 @@ public class PathManager
     private int currentPointIndex;
     private int remainingPointDuration;
     private boolean playing;
-    private int duration = 1000;
+    private int duration = 100;
     private double prevRoll;
     private double roll;
     private double prevFov;
     private double fov;
     private double showPoints;
 
-    private PathManager() {}
+    private PathManager()
+    {
+    }
 
     public double getRoll()
     {
@@ -173,14 +178,17 @@ public class PathManager
                 this.interpolator = null;
                 this.showMessage("Waypoints cleared!");
             }
+            if(event.getKey() == GLFW.GLFW_KEY_L)
+            {
+                //Minecraft.getInstance().displayGuiScreen(new EditPointScreen());
+            }
         }
     }
 
     @SubscribeEvent
     public void tick(TickEvent.ClientTickEvent event)
     {
-        if(event.phase != TickEvent.Phase.START)
-            return;
+        if(event.phase != TickEvent.Phase.START) return;
 
         this.prevRoll = this.roll;
         this.prevFov = this.fov;
@@ -322,6 +330,7 @@ public class PathManager
         Vec3d view = mc.gameRenderer.getActiveRenderInfo().getProjectedView();
         matrixStack.translate(-view.getX(), -view.getY(), -view.getZ());
 
+        AxisAlignedBB pointBox = new AxisAlignedBB(-0.10, -0.10, -0.10, 0.10, 0.10, 0.10);
         IRenderTypeBuffer.Impl renderTypeBuffer = mc.getRenderTypeBuffers().getBufferSource();
         IVertexBuilder builder = renderTypeBuffer.getBuffer(RenderType.getLines());
         Matrix4f lastMatrix = matrixStack.getLast().getMatrix();
@@ -336,6 +345,12 @@ public class PathManager
                 Vec3d v2 = this.interpolator.pos(i, progress + segment);
                 builder.pos(lastMatrix, (float) v1.getX(), (float) v1.getY(), (float) v1.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
                 builder.pos(lastMatrix, (float) v2.getX(), (float) v2.getY(), (float) v2.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
+
+                /*matrixStack.push();
+                matrixStack.translate(v1.getX(), v1.getY(), v1.getZ());
+                matrixStack.scale(0.5F, 0.5F, 0.5F);
+                WorldRenderer.drawBoundingBox(matrixStack, builder, pointBox, 0.0F, 0.0F, 0.0F, 1.0F);
+                matrixStack.pop();*/
             }
         }
 
@@ -366,5 +381,74 @@ public class PathManager
             return END_POINT_COLOR;
         }
         return POINT_COLOR;
+    }
+
+    @SubscribeEvent
+    public void onRawMouseInput(InputEvent.RawMouseEvent event)
+    {
+        Minecraft mc = Minecraft.getInstance();
+        if(mc.loadingGui != null || mc.currentScreen != null || !mc.mouseHelper.isMouseGrabbed() || mc.player == null || !mc.player.isSpectator())
+        {
+            return;
+        }
+
+        if(event.getAction() == GLFW.GLFW_PRESS && event.getButton() == GLFW.GLFW_MOUSE_BUTTON_RIGHT)
+        {
+            PathPoint hoveredPathPoint = getHoveredPathPoint();
+            if(hoveredPathPoint != null)
+            {
+                mc.displayGuiScreen(new EditPointScreen(hoveredPathPoint));
+            }
+        }
+    }
+
+    /**
+     * Checks if the player is looking at a path point. This method is hooked via ASM so removing
+     * this will cause the game to crash if you don't also remove it from the hook.
+     *
+     * @return if the player is looking at a path point
+     */
+    @SuppressWarnings("unused")
+    public static boolean isLookingAtPathPoint()
+    {
+        return getHoveredPathPoint() != null;
+    }
+
+    @Nullable
+    private static PathPoint getHoveredPathPoint()
+    {
+        Minecraft mc = Minecraft.getInstance();
+        if(mc.player == null || !mc.player.isSpectator())
+        {
+            return null;
+        }
+
+        /* Setup the start and end vec of the ray trace */
+        double reachDistance = mc.player.getAttribute(PlayerEntity.REACH_DISTANCE).getValue();
+        Vec3d startVec = mc.player.getEyePosition(mc.getRenderPartialTicks());
+        Vec3d endVec = startVec.add(mc.player.getLookVec().scale(reachDistance));
+
+        /* Creates axis aligned boxes for all path points then remove ones that aren't close enough to the player */
+        List<Pair<PathPoint, AxisAlignedBB>> pointPairs = PathManager.get().points.stream().map(p -> Pair.of(p, new AxisAlignedBB(p.getX(), p.getY(), p.getZ(), p.getX() + 0.25, p.getY() + 0.25, p.getZ() + 0.25).offset(-0.125, -0.125, -0.125))).collect(Collectors.toList());
+        pointPairs.removeIf(pair -> pair.getRight().getCenter().distanceTo(startVec) > reachDistance + 1);
+
+        /* Ray trace and get the closest path point */
+        double closestDistance = Double.MAX_VALUE;
+        PathPoint closestPoint = null;
+        for(Pair<PathPoint, AxisAlignedBB> pair : pointPairs)
+        {
+            Optional<Vec3d> optional = pair.getRight().rayTrace(startVec, endVec);
+            if(optional.isPresent())
+            {
+                double distance = startVec.squareDistanceTo(optional.get());
+                if(distance < closestDistance)
+                {
+                    closestPoint = pair.getLeft();
+                    closestDistance = distance;
+                }
+            }
+        }
+
+        return closestPoint;
     }
 }
