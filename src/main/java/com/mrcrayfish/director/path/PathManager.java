@@ -61,7 +61,9 @@ public class PathManager
     private double roll;
     private double prevFov;
     private double fov;
-    private double showPoints;
+
+    private PathPoint repositionPoint;
+    private boolean repositioning;
 
     private PathManager()
     {
@@ -117,6 +119,17 @@ public class PathManager
 
     /**
      *
+     * @param point
+     */
+    public void reposition(PathPoint point)
+    {
+        this.repositionPoint = point;
+        this.repositioning = true;
+        this.showMessage("Update the waypoint by creating a new waypoint");
+    }
+
+    /**
+     *
      */
     private void updateDuration()
     {
@@ -155,10 +168,20 @@ public class PathManager
         {
             if(event.getKey() == GLFW.GLFW_KEY_P) //Add new point
             {
-                this.points.add(new PathPoint(mc.player, this));
-                this.interpolator = new SmoothInterpolator(this.points);
+                if(this.repositioning)
+                {
+                    this.repositionPoint.update(mc.player,this);
+                    this.repositionPoint = null;
+                    this.repositioning = false;
+                    this.showMessage("Updated waypoint!");
+                }
+                else
+                {
+                    this.points.add(new PathPoint(mc.player, this));
+                    this.interpolator = new SmoothInterpolator(this.points);
+                    this.showMessage("Added a new waypoint!");
+                }
                 this.updateDuration();
-                this.showMessage("Added a new waypoint!");
             }
             if(event.getKey() == GLFW.GLFW_KEY_BACKSLASH) //Reset roll
             {

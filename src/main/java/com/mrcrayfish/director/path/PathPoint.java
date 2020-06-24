@@ -21,6 +21,11 @@ public class PathPoint
 
     public PathPoint(PlayerEntity player, PathManager manager)
     {
+        this.update(player, manager);
+    }
+
+    public void update(PlayerEntity player, PathManager manager)
+    {
         this.x = player.getPosX();
         this.y = player.getPosY();
         this.z = player.getPosZ();

@@ -32,13 +32,17 @@ public class EditPointScreen extends Screen
     protected void init()
     {
         List<AbstractButton> buttons = new ArrayList<>();
-        buttons.add(Icons.MARKER.createButton(0, 0, button -> {}).setDescription("director.button.reposition"));
+        buttons.add(Icons.MARKER.createButton(0, 0, button -> {
+            PathManager.get().reposition(this.point);
+            this.onClose();
+        }).setDescription("director.button.reposition"));
         buttons.add(Icons.PENCIL.createButton(0, 0, button -> {}).setDescription("director.button.change_values"));
         buttons.add(Icons.SHARE.createButton(0, 0, button -> {}).setDescription("director.button.modify_curve"));
         buttons.add(Icons.BIN.createButton(0, 0, button -> {
             PathManager.get().delete(this.point);
             this.onClose();
         }).setDescription("director.button.delete"));
+
         this.contentWidth = buttons.size() * 20 + (buttons.size() - 1) * 2 + 4;
         Pair<Integer, Integer> dimensions = ScreenUtil.getDimensionsForWindow(this.contentWidth, 24);
         int startX = (this.width - dimensions.getLeft()) / 2;
