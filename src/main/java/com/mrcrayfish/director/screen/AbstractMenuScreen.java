@@ -1,5 +1,6 @@
 package com.mrcrayfish.director.screen;
 
+import com.mrcrayfish.director.Icons;
 import com.mrcrayfish.director.util.ScreenUtil;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
@@ -8,6 +9,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.util.text.ITextComponent;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,17 +18,23 @@ import java.util.List;
  */
 public abstract class AbstractMenuScreen extends Screen
 {
+    private Screen parent;
     private int contentWidth;
 
-    protected AbstractMenuScreen(ITextComponent titleIn)
+    protected AbstractMenuScreen(ITextComponent titleIn, @Nullable Screen parent)
     {
         super(titleIn);
+        this.parent = parent;
     }
 
     @Override
     protected void init()
     {
         List<Widget> widgets = new ArrayList<>();
+        if(this.parent != null)
+        {
+            widgets.add(Icons.LEFT_ARROW.createButton(0, 0, button -> this.minecraft.displayGuiScreen(this.parent)).setDescription("director.button.back"));
+        }
         this.loadWidgets(widgets);
 
         int contentWidth = (widgets.size() - 1) * 2 + 4;

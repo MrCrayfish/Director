@@ -21,7 +21,8 @@ public enum Icons
     PENCIL,
     MARKER,
     SHARE,
-    PLUS;
+    PLUS,
+    LEFT_ARROW;
 
     public int getU()
     {

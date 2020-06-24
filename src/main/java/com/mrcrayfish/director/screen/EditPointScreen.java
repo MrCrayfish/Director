@@ -20,7 +20,7 @@ public class EditPointScreen extends AbstractMenuScreen
 
     public EditPointScreen(PathPoint point)
     {
-        super(new TranslationTextComponent("director.title.edit_point"));
+        super(new TranslationTextComponent("director.title.edit_point"), null);
         this.point = point;
     }
 
@@ -34,7 +34,9 @@ public class EditPointScreen extends AbstractMenuScreen
 
         widgets.add(Icons.PENCIL.createButton(0, 0, button -> {}).setDescription("director.button.change_values"));
 
-        widgets.add(Icons.SHARE.createButton(0, 0, button -> {}).setDescription("director.button.modify_curve"));
+        widgets.add(Icons.SHARE.createButton(0, 0, button -> {
+            this.minecraft.displayGuiScreen(new AdjustCurveScreen(this));
+        }).setDescription("director.button.modify_curve"));
 
         widgets.add(Icons.PLUS.createButton(0, 0, button -> {
             PathManager.get().insertAfter(this.point);

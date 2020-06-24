@@ -1,6 +1,7 @@
 {
     "director.format.message": "§6§l%s",
     "director.format.value": "§6§l%s:§r %s",
+    "director.button.back": "Back",
     "director.button.reposition": "Reposition",
     "director.button.change_values": "Change Values",
     "director.button.modify_curve": "Modify Curve",
