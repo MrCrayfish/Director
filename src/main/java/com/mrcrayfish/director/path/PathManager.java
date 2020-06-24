@@ -53,8 +53,11 @@ public class PathManager
     private int remainingPointDuration;
     private boolean playing;
     private int duration = 1000;
+    private double prevRoll;
     private double roll;
+    private double prevFov;
     private double fov;
+    private double showPoints;
 
     private PathManager() {}
 
@@ -179,6 +182,9 @@ public class PathManager
         if(event.phase != TickEvent.Phase.START)
             return;
 
+        this.prevRoll = this.roll;
+        this.prevFov = this.fov;
+
         if(this.playing)
         {
             if(this.remainingPointDuration > 0)
@@ -280,7 +286,7 @@ public class PathManager
         }
         else
         {
-            event.setRoll((float) this.roll);
+            event.setRoll((float) (this.prevRoll + (this.roll - this.prevRoll) * event.getRenderPartialTicks()));
         }
     }
 
@@ -296,7 +302,8 @@ public class PathManager
         }
         else
         {
-            event.setFOV(Minecraft.getInstance().gameSettings.fov + this.fov);
+            double fov = this.prevFov + (this.fov - this.prevFov) * event.getRenderPartialTicks();
+            event.setFOV(Minecraft.getInstance().gameSettings.fov + fov);
         }
     }
 
