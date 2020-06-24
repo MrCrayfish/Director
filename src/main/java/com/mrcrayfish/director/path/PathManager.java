@@ -427,6 +427,8 @@ public class PathManager
             PathPoint hoveredPathPoint = getHoveredPathPoint();
             if(hoveredPathPoint != null)
             {
+                this.repositioning = false;
+                this.repositionPoint = null;
                 mc.displayGuiScreen(new EditPointScreen(hoveredPathPoint));
             }
         }
