@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
  */
 public class PathManager
 {
+    private static final double POINT_BOX_SIZE = 0.5;
     private static final float[] START_POINT_COLOR = {1.0F, 0.18F, 0.0F};
     private static final float[] POINT_COLOR = {1.0F, 0.815F, 0.0F};
     private static final float[] END_POINT_COLOR = {0.549F, 1.0F, 0.0F};
@@ -354,13 +355,13 @@ public class PathManager
             }
         }
 
-        AxisAlignedBB pathBox = new AxisAlignedBB(-0.25, -0.25, -0.25, 0.25, 0.25, 0.25);
+        double halfBoxSize = POINT_BOX_SIZE / 2;
+        AxisAlignedBB pathBox = new AxisAlignedBB(-halfBoxSize, -halfBoxSize, -halfBoxSize, halfBoxSize, halfBoxSize, halfBoxSize);
         for(int i = 0; i < this.points.size(); i++)
         {
             PathPoint p1 = this.points.get(i);
             matrixStack.push();
             matrixStack.translate(p1.getX(), p1.getY(), p1.getZ());
-            matrixStack.scale(0.5F, 0.5F, 0.5F);
             float[] color = this.getPointColor(i);
             WorldRenderer.drawBoundingBox(matrixStack, builder, pathBox, color[0], color[1], color[2], 1.0F);
             matrixStack.pop();
@@ -429,7 +430,8 @@ public class PathManager
         Vec3d endVec = startVec.add(mc.player.getLookVec().scale(reachDistance));
 
         /* Creates axis aligned boxes for all path points then remove ones that aren't close enough to the player */
-        List<Pair<PathPoint, AxisAlignedBB>> pointPairs = PathManager.get().points.stream().map(p -> Pair.of(p, new AxisAlignedBB(p.getX(), p.getY(), p.getZ(), p.getX() + 0.25, p.getY() + 0.25, p.getZ() + 0.25).offset(-0.125, -0.125, -0.125))).collect(Collectors.toList());
+        double halfBoxSize = POINT_BOX_SIZE / 2;
+        List<Pair<PathPoint, AxisAlignedBB>> pointPairs = PathManager.get().points.stream().map(p -> Pair.of(p, new AxisAlignedBB(p.getX(), p.getY(), p.getZ(), p.getX() + POINT_BOX_SIZE, p.getY() + POINT_BOX_SIZE, p.getZ() + POINT_BOX_SIZE).offset(-halfBoxSize, -halfBoxSize, -halfBoxSize))).collect(Collectors.toList());
         pointPairs.removeIf(pair -> pair.getRight().getCenter().distanceTo(startVec) > reachDistance + 1);
 
         /* Ray trace and get the closest path point */
