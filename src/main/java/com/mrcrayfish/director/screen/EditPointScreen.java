@@ -38,6 +38,10 @@ public class EditPointScreen extends Screen
         }).setDescription("director.button.reposition"));
         buttons.add(Icons.PENCIL.createButton(0, 0, button -> {}).setDescription("director.button.change_values"));
         buttons.add(Icons.SHARE.createButton(0, 0, button -> {}).setDescription("director.button.modify_curve"));
+        buttons.add(Icons.PLUS.createButton(0, 0, button -> {
+            PathManager.get().insertAfter(this.point);
+            this.onClose();
+        }).setDescription("director.button.insert_after"));
         buttons.add(Icons.BIN.createButton(0, 0, button -> {
             PathManager.get().delete(this.point);
             this.onClose();

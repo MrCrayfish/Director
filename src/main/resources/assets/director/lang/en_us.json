@@ -4,5 +4,6 @@
     "director.button.reposition": "Reposition",
     "director.button.change_values": "Change Values",
     "director.button.modify_curve": "Modify Curve",
-    "director.button.delete": "Delete Waypoint"
+    "director.button.delete": "Delete Waypoint",
+    "director.button.insert_after": "Insert Waypoint After"
 }

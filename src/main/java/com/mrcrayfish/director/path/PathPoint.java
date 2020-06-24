@@ -15,6 +15,7 @@ public class PathPoint
     private double pitch;
     private double roll;
     private double fov;
+    private double originalFov;
 
     private double length;
     private int duration;
@@ -33,6 +34,14 @@ public class PathPoint
         this.pitch = player.rotationPitch;
         this.roll = manager.getRoll();
         this.fov = Minecraft.getInstance().gameSettings.fov + manager.getFov();
+        this.originalFov = manager.getFov();
+    }
+
+    public void copy(PlayerEntity player, PathManager manager)
+    {
+        player.setPositionAndRotation(this.x, this.y, this.z, (float) this.yaw, (float) this.pitch);
+        manager.setRoll(this.roll);
+        manager.setFov(this.originalFov);
     }
 
     public double getX()
@@ -68,6 +77,11 @@ public class PathPoint
     public double getFov()
     {
         return this.fov;
+    }
+
+    public double getOriginalFov()
+    {
+        return this.originalFov;
     }
 
     public double getLength()

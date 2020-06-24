@@ -62,8 +62,9 @@ public class PathManager
     private double prevFov;
     private double fov;
 
-    private PathPoint repositionPoint;
+    private PathPoint editingPoint;
     private boolean repositioning;
+    private boolean insertAfter;
 
     private PathManager()
     {
@@ -74,9 +75,19 @@ public class PathManager
         return this.roll;
     }
 
+    public void setRoll(double roll)
+    {
+        this.roll = roll;
+    }
+
     public double getFov()
     {
         return this.fov;
+    }
+
+    public void setFov(double fov)
+    {
+        this.fov = fov;
     }
 
     /**
@@ -84,6 +95,9 @@ public class PathManager
      */
     public void play()
     {
+        this.repositioning = false;
+        this.insertAfter = false;
+        this.editingPoint = null;
         this.duration = 100;
         this.updateDuration();
         if(this.points.size() < 2)
@@ -123,9 +137,22 @@ public class PathManager
      */
     public void reposition(PathPoint point)
     {
-        this.repositionPoint = point;
+        point.copy(Minecraft.getInstance().player, this);
+        this.editingPoint = point;
         this.repositioning = true;
         this.showMessage("Update the waypoint by creating a new waypoint");
+    }
+
+    /**
+     *
+     * @param point
+     */
+    public void insertAfter(PathPoint point)
+    {
+        point.copy(Minecraft.getInstance().player, this);
+        this.editingPoint = point;
+        this.insertAfter = true;
+        this.showMessage("Insert a waypoint by creating a new waypoint");
     }
 
     /**
@@ -170,10 +197,18 @@ public class PathManager
             {
                 if(this.repositioning)
                 {
-                    this.repositionPoint.update(mc.player,this);
-                    this.repositionPoint = null;
+                    this.editingPoint.update(mc.player, this);
+                    this.editingPoint = null;
                     this.repositioning = false;
                     this.showMessage("Updated waypoint!");
+                }
+                else if(this.insertAfter)
+                {
+                    int index = this.points.indexOf(this.editingPoint);
+                    this.points.add(index + 1, new PathPoint(mc.player, this));
+                    this.editingPoint = null;
+                    this.insertAfter = false;
+                    this.showMessage("Inserted a new waypoint!");
                 }
                 else
                 {
@@ -182,16 +217,6 @@ public class PathManager
                     this.showMessage("Added a new waypoint!");
                 }
                 this.updateDuration();
-            }
-            if(event.getKey() == GLFW.GLFW_KEY_BACKSLASH) //Reset roll
-            {
-                this.roll = 0;
-                this.showMessage("Reset Roll");
-            }
-            if(event.getKey() == GLFW.GLFW_KEY_0) //Reset fov
-            {
-                this.fov = 0;
-                this.showMessage("Reset FOV");
             }
             if(event.getKey() == GLFW.GLFW_KEY_I)
             {
@@ -395,13 +420,13 @@ public class PathManager
         long windowId = Minecraft.getInstance().getMainWindow().getHandle();
         if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS)
         {
-            this.fov -= 0.5 * event.getScrollDelta();
+            this.fov -= event.getScrollDelta();
             this.showValue("FOV", String.valueOf(this.fov));
             event.setCanceled(true);
         }
         else if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_LEFT_ALT) == GLFW.GLFW_PRESS)
         {
-            this.roll += 0.5 * event.getScrollDelta();
+            this.roll += event.getScrollDelta();
             this.showValue("Roll", String.valueOf(this.roll));
             event.setCanceled(true);
         }
@@ -422,8 +447,26 @@ public class PathManager
             if(hoveredPathPoint != null)
             {
                 this.repositioning = false;
-                this.repositionPoint = null;
+                this.editingPoint = null;
                 mc.displayGuiScreen(new EditPointScreen(hoveredPathPoint));
+                event.setCanceled(true);
+            }
+        }
+
+        if(event.getAction() == GLFW.GLFW_PRESS && event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE)
+        {
+            long windowId = Minecraft.getInstance().getMainWindow().getHandle();
+            if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS)
+            {
+                this.fov = 0;
+                this.showMessage("Reset FOV");
+                event.setCanceled(true);
+            }
+            else if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_LEFT_ALT) == GLFW.GLFW_PRESS)
+            {
+                this.roll = 0;
+                this.showMessage("Reset Roll");
+                event.setCanceled(true);
             }
         }
     }
