@@ -20,7 +20,8 @@ public enum Icons
     CROSS,
     PENCIL,
     MARKER,
-    SHARE;
+    SHARE,
+    PLUS;
 
     public int getU()
     {
