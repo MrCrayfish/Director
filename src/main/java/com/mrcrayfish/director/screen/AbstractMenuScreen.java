@@ -8,6 +8,7 @@ import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.AbstractButton;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
@@ -32,6 +33,8 @@ public abstract class AbstractMenuScreen extends Screen
     @Override
     protected void init()
     {
+        this.minecraft.player.sendStatusMessage(new StringTextComponent(""), true);
+
         List<Widget> widgets = new ArrayList<>();
         if(this.parent != null)
         {
