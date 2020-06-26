@@ -100,8 +100,6 @@ public class PathManager
         this.repositioning = false;
         this.insertAfter = false;
         this.editingPoint = null;
-        this.duration = 100;
-        this.updateLengthAndSteps();
         if(this.points.size() < 2)
         {
             Minecraft.getInstance().player.sendMessage(new StringTextComponent("You need at least 2 points to play the path"));
@@ -189,13 +187,6 @@ public class PathManager
                     p1.setStep(j, this.getProgressForDistance(100, i, 0, j * step, 0.0F, 1.0F));
                 }
             }
-
-            for(int i = 0; i < this.points.get(0).getStepCount(); i++)
-            {
-                System.out.println(i + " " + this.points.get(0).getStep(i));
-            }
-
-
         }
     }
 
