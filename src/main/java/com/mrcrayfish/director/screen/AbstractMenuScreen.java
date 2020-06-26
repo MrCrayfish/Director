@@ -34,6 +34,7 @@ public abstract class AbstractMenuScreen extends Screen
     protected void init()
     {
         this.minecraft.player.sendStatusMessage(new StringTextComponent(""), true);
+        this.minecraft.player.setMotion(0, 0, 0);
 
         List<Widget> widgets = new ArrayList<>();
         if(this.parent != null)
