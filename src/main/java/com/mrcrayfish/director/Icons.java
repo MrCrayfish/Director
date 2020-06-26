@@ -22,7 +22,8 @@ public enum Icons
     MARKER,
     SHARE,
     PLUS,
-    LEFT_ARROW;
+    LEFT_ARROW,
+    RESET;
 
     public int getU()
     {

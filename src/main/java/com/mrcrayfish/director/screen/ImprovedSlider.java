@@ -44,14 +44,14 @@ public class ImprovedSlider extends Slider
         super.updateSlider();
         this.handler.onChangeSliderValue(this);
 
-        /* */
-        /*Minecraft mc = Minecraft.getInstance();
+        /* Fixes the slider not being released when mouse is released outside of slider area */
+        Minecraft mc = Minecraft.getInstance();
         if(this.dragging && GLFW.glfwGetMouseButton(mc.getMainWindow().getHandle(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_RELEASE)
         {
             double mouseX = mc.mouseHelper.getMouseX() * (double) mc.getMainWindow().getScaledWidth() / (double) mc.getMainWindow().getWidth();
             double mouseY = mc.mouseHelper.getMouseY() * (double) mc.getMainWindow().getScaledHeight() / (double) mc.getMainWindow().getHeight();
             this.onRelease(mouseX, mouseY);
             this.dragging = false;
-        }*/
+        }
     }
 }

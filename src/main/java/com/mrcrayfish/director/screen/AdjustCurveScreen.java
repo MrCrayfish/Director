@@ -1,5 +1,6 @@
 package com.mrcrayfish.director.screen;
 
+import com.mrcrayfish.director.Icons;
 import com.mrcrayfish.director.path.PathManager;
 import com.mrcrayfish.director.path.PathPoint;
 import com.mrcrayfish.director.path.interpolator.SmoothInterpolator;
@@ -7,6 +8,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.fml.client.gui.widget.Slider;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -28,7 +30,7 @@ public class AdjustCurveScreen extends AbstractMenuScreen
     protected void loadWidgets(List<Widget> widgets)
     {
         SmoothInterpolator.Properties properties = (SmoothInterpolator.Properties) this.point.getProperties();
-        widgets.add(new ImprovedSlider(0, 0, 100, 20, "Smoothness: ", "", 0.0, 3.0, properties.getSmoothness(), true, true, slider -> properties.setSmoothness(MathHelper.clamp(slider.getValue(), 0.0, 3.0)))
+        Slider slider = new ImprovedSlider(0, 0, 100, 20, "Smoothness: ", "", 0.0, 3.0, properties.getSmoothness(), true, true, slider1 -> properties.setSmoothness(MathHelper.clamp(slider1.getValue(), 0.0, 3.0)))
         {
             @Override
             public void onRelease(double mouseX, double mouseY)
@@ -36,6 +38,14 @@ public class AdjustCurveScreen extends AbstractMenuScreen
                 super.onRelease(mouseX, mouseY);
                 PathManager.get().updateLengthAndSteps();
             }
-        });
+        };
+        widgets.add(slider);
+
+        widgets.add(Icons.RESET.createButton(0, 0, button -> {
+            slider.setValue(1.0);
+            slider.updateSlider();
+            properties.setSmoothness(1.0);
+            PathManager.get().updateLengthAndSteps();
+        }).setDescription("director.button.reset_smoothness"));
     }
 }

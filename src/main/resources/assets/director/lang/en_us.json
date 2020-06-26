@@ -6,5 +6,6 @@
     "director.button.change_values": "Change Values",
     "director.button.modify_curve": "Modify Curve",
     "director.button.delete": "Delete Waypoint",
-    "director.button.insert_after": "Insert Waypoint After"
+    "director.button.insert_after": "Insert Waypoint After",
+    "director.button.reset_smoothness": "Reset Smoothness"
 }
