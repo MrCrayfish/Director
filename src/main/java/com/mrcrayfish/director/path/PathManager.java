@@ -26,6 +26,7 @@ import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -52,7 +53,7 @@ public class PathManager
     }
 
     private List<PathPoint> points = new ArrayList<>();
-    private AbstractInterpolator interpolator;
+    private AbstractInterpolator interpolator = new SmoothInterpolator(this.points);
     private int currentPointIndex;
     private int remainingPointDuration;
     private boolean playing;
@@ -66,8 +67,9 @@ public class PathManager
     private boolean repositioning;
     private boolean insertAfter;
 
-    private PathManager()
+    public AbstractInterpolator getInterpolator()
     {
+        return this.interpolator;
     }
 
     public double getRoll()
@@ -99,7 +101,7 @@ public class PathManager
         this.insertAfter = false;
         this.editingPoint = null;
         this.duration = 100;
-        this.updateDuration();
+        this.updateLengthAndSteps();
         if(this.points.size() < 2)
         {
             Minecraft.getInstance().player.sendMessage(new StringTextComponent("You need at least 2 points to play the path"));
@@ -108,7 +110,7 @@ public class PathManager
         Minecraft.getInstance().player.sendChatMessage("/gamemode spectator");
         Minecraft.getInstance().player.abilities.isFlying = true;
         this.currentPointIndex = 0;
-        this.remainingPointDuration = this.points.get(0).getDuration();
+        this.remainingPointDuration = this.points.get(0).getStepCount();
         this.playing = true;
     }
 
@@ -128,7 +130,7 @@ public class PathManager
     public void delete(PathPoint point)
     {
         this.points.remove(point);
-        this.updateDuration();
+        this.updateLengthAndSteps();
     }
 
     /**
@@ -158,32 +160,42 @@ public class PathManager
     /**
      *
      */
-    private void updateDuration()
+    public void updateLengthAndSteps()
     {
         if(this.points.size() > 1)
         {
-            double[] pathLengths = new double[this.points.size() - 1];
-            double totalLength = 0;
-            int segmentsPerPoint = 50;
+            /* Gets the length of each connection on the path */
+            double[] lengths = new double[this.points.size() - 1];
             for(int i = 0; i < this.points.size() - 1; i++)
             {
-                double pathLength = 0;
-                for(int j = 0; j < segmentsPerPoint; j++)
+                lengths[i] = this.interpolator.length(i, i + 1);
+            }
+
+            /* Updates each point's step count based on the connection length over the total length
+             * of the path*/
+            double totalLength = Arrays.stream(lengths).sum();
+            for(int i = 0; i < this.points.size() - 1; i++)
+            {
+                this.points.get(i).setStepCount((int) (this.duration * (lengths[i] / totalLength) + 0.5));
+            }
+
+            /* Updates the step length to get to each sub-point */
+            for(int i = 0; i < this.points.size() - 1; i++)
+            {
+                PathPoint p1 = this.points.get(i);
+                float step = (float) (lengths[i] / p1.getStepCount());
+                for(int j = 0; j < p1.getStepCount(); j++)
                 {
-                    float chunk = 1.0F / segmentsPerPoint;
-                    float progress = (float) j / (float) segmentsPerPoint;
-                    Vec3d p1 = this.interpolator.pos(i, progress);
-                    Vec3d p2 = this.interpolator.pos(i, progress + chunk);
-                    pathLength += p1.distanceTo(p2);
+                    p1.setStep(j, this.getProgressForDistance(100, i, 0, j * step, 0.0F, 1.0F));
                 }
-                pathLengths[i] = pathLength;
-                totalLength += pathLength;
-                this.points.get(i).setLength(pathLength);
             }
-            for(int i = 0; i < this.points.size() - 1; i++)
+
+            for(int i = 0; i < this.points.get(0).getStepCount(); i++)
             {
-                this.points.get(i).setDuration((int) (duration * (pathLengths[i] / totalLength) + 0.5));
+                System.out.println(i + " " + this.points.get(0).getStep(i));
             }
+
+
         }
     }
 
@@ -213,10 +225,9 @@ public class PathManager
                 else
                 {
                     this.points.add(new PathPoint(mc.player, this));
-                    this.interpolator = new SmoothInterpolator(this.points);
                     this.showMessage("Added a new waypoint!");
                 }
-                this.updateDuration();
+                this.updateLengthAndSteps();
             }
             if(event.getKey() == GLFW.GLFW_KEY_I)
             {
@@ -230,14 +241,44 @@ public class PathManager
             {
                 this.stop();
                 this.points.clear();
-                this.interpolator = null;
                 this.showMessage("Waypoints cleared!");
             }
-            if(event.getKey() == GLFW.GLFW_KEY_L)
+        }
+    }
+
+    private float getProgressForDistance(int limit, int index, double startDistance, double targetDistance, float startProgress, float endProgress)
+    {
+        if(limit <= 0)
+        {
+            return startProgress;
+        }
+
+        float tailProgress = 0;
+        float headProgress = 0;
+        double distance = startDistance;
+        Vec3d lastPos = this.interpolator.pos(index, startProgress);
+        float step = (endProgress - startProgress) / 10F;
+        for(int i = 0; i <= 10; i++)
+        {
+            float progress = i * step;
+            Vec3d pos = this.interpolator.pos(index, startProgress + progress);
+            distance += pos.distanceTo(lastPos);
+            lastPos = pos;
+            if(distance < targetDistance)
             {
-                //Minecraft.getInstance().displayGuiScreen(new EditPointScreen());
+                tailProgress = progress;
+                startDistance = distance;
+            }
+            else if(distance > targetDistance && headProgress == 0)
+            {
+                headProgress = progress;
+            }
+            if(Math.abs(targetDistance - distance) < 0.001)
+            {
+                return startProgress + progress;
             }
         }
+        return this.getProgressForDistance(limit - 1, index, startDistance, targetDistance, startProgress + tailProgress, startProgress + headProgress);
     }
 
     @SubscribeEvent
@@ -253,12 +294,12 @@ public class PathManager
             if(this.remainingPointDuration > 0)
             {
                 this.remainingPointDuration--;
-                if(this.remainingPointDuration <= 0)
+                if(this.remainingPointDuration < 1)
                 {
-                    if(this.currentPointIndex < this.points.size() - 1)
+                    if(this.currentPointIndex < this.points.size() - 2)
                     {
                         this.currentPointIndex++;
-                        this.remainingPointDuration = this.points.get(this.currentPointIndex).getDuration();
+                        this.remainingPointDuration = this.points.get(this.currentPointIndex).getStepCount();
                     }
                     else
                     {
@@ -283,15 +324,28 @@ public class PathManager
         Minecraft.getInstance().player.sendStatusMessage(new TranslationTextComponent("director.format.value", name, value), true);
     }
 
+    private float getProgress(float partialTicks)
+    {
+        if(this.currentPointIndex >= 0 && this.currentPointIndex < this.points.size())
+        {
+            PathPoint p1 = this.points.get(this.currentPointIndex);
+            float s1 = p1.getStep(p1.getStepCount() - this.remainingPointDuration);
+            float s2 = 1.0F;
+            if(this.remainingPointDuration - 1 != 0)
+            {
+                s2 = p1.getStep(p1.getStepCount() - (this.remainingPointDuration - 1));
+            }
+            return s1 + (s2 - s1) * partialTicks;
+        }
+        return 0.0F;
+    }
+
     @SubscribeEvent
     public void render(TickEvent.RenderTickEvent event)
     {
         if(this.isPlaying())
         {
-            /* Calculate the current progress between two points based on the remaining time */
-            PathPoint p1 = this.points.get(this.currentPointIndex);
-            PathPoint p2 = this.points.get(this.currentPointIndex + 1);
-            float progress = 1.0F - ((float) this.remainingPointDuration - event.renderTickTime) / (float) p1.getDuration();
+            float progress = this.getProgress(event.renderTickTime);
 
             /* Updated the position of the player */
             Vec3d pos = this.interpolator.pos(this.currentPointIndex, progress);
@@ -318,8 +372,7 @@ public class PathManager
     {
         if(this.isPlaying())
         {
-            PathPoint p1 = this.points.get(this.currentPointIndex);
-            float progress = 1.0F - ((float) this.remainingPointDuration - (float) event.getRenderPartialTicks()) / (float) p1.getDuration();
+            float progress = this.getProgress((float) event.getRenderPartialTicks());
             float roll = this.interpolator.roll(this.currentPointIndex, progress);
             event.setRoll(roll);
         }
@@ -334,8 +387,7 @@ public class PathManager
     {
         if(this.isPlaying())
         {
-            PathPoint p1 = this.points.get(this.currentPointIndex);
-            float progress = 1.0F - ((float) this.remainingPointDuration - (float) event.getRenderPartialTicks()) / (float) p1.getDuration();
+            float progress = this.getProgress((float) event.getRenderPartialTicks());
             double fov = this.interpolator.fov(this.currentPointIndex, progress);
             event.setFOV(fov);
         }
@@ -368,17 +420,15 @@ public class PathManager
         for(int i = 0; i < this.points.size() - 1; i++)
         {
             PathPoint p1 = this.points.get(i);
-            for(int j = 0; j < p1.getDuration(); j++)
+            for(int j = 0; j <= p1.getStepCount(); j++)
             {
-                float segment = 1.0F / p1.getDuration();
-                float progress = j * segment;
-                Vec3d v1 = this.interpolator.pos(i, progress);
-                Vec3d v2 = this.interpolator.pos(i, progress + segment);
+                Vec3d v1 = this.interpolator.pos(i, j == 0 ? 0.0F : p1.getStep(j - 1));
+                Vec3d v2 = this.interpolator.pos(i, j == p1.getStepCount() ? 1.0F : p1.getStep(j));
                 builder.pos(lastMatrix, (float) v1.getX(), (float) v1.getY(), (float) v1.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
                 builder.pos(lastMatrix, (float) v2.getX(), (float) v2.getY(), (float) v2.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
 
                 /*matrixStack.push();
-                matrixStack.translate(v1.getX(), v1.getY(), v1.getZ());
+                matrixStack.translate(v2.getX(), v2.getY(), v2.getZ());
                 matrixStack.scale(0.5F, 0.5F, 0.5F);
                 WorldRenderer.drawBoundingBox(matrixStack, builder, pointBox, 0.0F, 0.0F, 0.0F, 1.0F);
                 matrixStack.pop();*/

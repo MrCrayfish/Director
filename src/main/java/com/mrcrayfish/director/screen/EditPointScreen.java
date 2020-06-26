@@ -27,16 +27,15 @@ public class EditPointScreen extends AbstractMenuScreen
     @Override
     protected void loadWidgets(List<Widget> widgets)
     {
+        /* Load any widgets specific to the interpolator */
+        PathManager.get().getInterpolator().loadEditPointWidgets(widgets, this.point, this);
+
         widgets.add(Icons.MARKER.createButton(0, 0, button -> {
             PathManager.get().reposition(this.point);
             this.onClose();
         }).setDescription("director.button.reposition"));
 
         widgets.add(Icons.PENCIL.createButton(0, 0, button -> {}).setDescription("director.button.change_values"));
-
-        widgets.add(Icons.SHARE.createButton(0, 0, button -> {
-            this.minecraft.displayGuiScreen(new AdjustCurveScreen(this));
-        }).setDescription("director.button.modify_curve"));
 
         widgets.add(Icons.PLUS.createButton(0, 0, button -> {
             PathManager.get().insertAfter(this.point);

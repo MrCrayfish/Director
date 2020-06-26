@@ -2,6 +2,7 @@ package com.mrcrayfish.director.screen;
 
 import com.mrcrayfish.director.Icons;
 import com.mrcrayfish.director.util.ScreenUtil;
+import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.AbstractButton;
@@ -12,6 +13,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Author: MrCrayfish
@@ -86,5 +88,11 @@ public abstract class AbstractMenuScreen extends Screen
             int width = this.minecraft.fontRenderer.getStringWidth(description);
             this.drawString(this.minecraft.fontRenderer, description, this.width / 2 - width / 2, startY - 12, 0xFFFFFF);
         }
+    }
+
+    @Override
+    public Optional<IGuiEventListener> getEventListenerForPos(double mouseX, double mouseY)
+    {
+        return super.getEventListenerForPos(mouseX, mouseY);
     }
 }

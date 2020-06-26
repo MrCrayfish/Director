@@ -16,13 +16,13 @@ public class PathPoint
     private double roll;
     private double fov;
     private double originalFov;
-
-    private double length;
-    private int duration;
+    private float[] steps;
+    private IProperties properties;
 
     public PathPoint(PlayerEntity player, PathManager manager)
     {
         this.update(player, manager);
+        this.properties = manager.getInterpolator().propertySupplier().get();
     }
 
     public void update(PlayerEntity player, PathManager manager)
@@ -84,23 +84,28 @@ public class PathPoint
         return this.originalFov;
     }
 
-    public double getLength()
+    public int getStepCount()
     {
-        return length;
+        return this.steps.length;
     }
 
-    public void setLength(double length)
+    public void setStepCount(int duration)
     {
-        this.length = length;
+        this.steps = new float[duration];
     }
 
-    public int getDuration()
+    public void setStep(int index, float progress)
     {
-        return this.duration;
+        this.steps[index] = progress;
     }
 
-    public void setDuration(int duration)
+    public float getStep(int index)
     {
-        this.duration = duration;
+        return this.steps[index];
+    }
+
+    public IProperties getProperties()
+    {
+        return this.properties;
     }
 }
