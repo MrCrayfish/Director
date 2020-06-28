@@ -45,6 +45,6 @@ public class EditPointScreen extends AbstractMenuScreen
         widgets.add(Icons.BIN.createButton(0, 0, button -> {
             PathManager.get().delete(this.point);
             this.onClose();
-        }).setDescription("director.button.delete"));
+        }).setDescription("director.button.delete_waypoint"));
     }
 }

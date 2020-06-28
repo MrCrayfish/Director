@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.mrcrayfish.director.path.interpolator.AbstractInterpolator;
 import com.mrcrayfish.director.path.interpolator.SmoothInterpolator;
 import com.mrcrayfish.director.screen.EditPointScreen;
+import com.mrcrayfish.director.screen.PathSettingsScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -118,6 +119,8 @@ public class PathManager
     public void stop()
     {
         this.playing = false;
+        this.roll = 0;
+        this.fov = 0;
     }
 
     public boolean isPlaying()
@@ -153,6 +156,16 @@ public class PathManager
         this.editingPoint = point;
         this.insertAfter = true;
         this.showMessage("Insert a waypoint by creating a new waypoint");
+    }
+
+    /**
+     *
+     */
+    public void deletePath()
+    {
+        this.stop();
+        this.points.clear();
+        this.showMessage("Waypoints cleared!");
     }
 
     /**
@@ -228,11 +241,9 @@ public class PathManager
             {
                 this.stop();
             }
-            if(event.getKey() == GLFW.GLFW_KEY_U)
+            if(event.getKey() == GLFW.GLFW_KEY_GRAVE_ACCENT)
             {
-                this.stop();
-                this.points.clear();
-                this.showMessage("Waypoints cleared!");
+                Minecraft.getInstance().displayGuiScreen(new PathSettingsScreen());
             }
         }
     }

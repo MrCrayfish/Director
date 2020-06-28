@@ -40,6 +40,7 @@ public abstract class AbstractMenuScreen extends Screen
         if(this.parent != null)
         {
             widgets.add(Icons.LEFT_ARROW.createButton(0, 0, button -> this.minecraft.displayGuiScreen(this.parent)).setDescription("director.button.back"));
+            widgets.add(Spacer.of(5));
         }
         this.loadWidgets(widgets);
 
