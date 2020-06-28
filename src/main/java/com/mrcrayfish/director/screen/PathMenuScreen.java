@@ -30,6 +30,7 @@ public class PathMenuScreen extends AbstractMenuScreen
         widgets.add(Spacer.of(5));
         widgets.add(Icons.BIN.createButton(0, 0, button -> {
             PathManager.get().deletePath();
+            this.onClose();
         }).setDescription("director.button.delete_path"));
     }
 }
