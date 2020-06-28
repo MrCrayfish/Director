@@ -4,6 +4,7 @@ import com.mrcrayfish.director.Icons;
 import com.mrcrayfish.director.screen.widget.IconButton;
 import com.mrcrayfish.director.screen.widget.Spacer;
 import com.mrcrayfish.director.util.ScreenUtil;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
@@ -71,6 +72,8 @@ public abstract class AbstractMenuScreen extends Screen
     @Override
     public void render(int mouseX, int mouseY, float partialTicks)
     {
+        this.fillGradient(0, this.height / 2, this.width, this.height, 0x00000000, 0xAA000000);
+
         Pair<Integer, Integer> dimensions = ScreenUtil.getDimensionsForWindow(this.contentWidth, 24);
         int startX = (this.width - dimensions.getLeft()) / 2;
         int startY = (this.height - dimensions.getRight()) - dimensions.getRight() / 2;
