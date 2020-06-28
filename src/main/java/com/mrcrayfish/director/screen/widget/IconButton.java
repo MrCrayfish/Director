@@ -57,7 +57,7 @@ public class IconButton extends Button
             combinedWidth += fontRenderer.getStringWidth(message);
             if(this.icon != null)
             {
-                combinedWidth += 2;
+                combinedWidth += 4;
             }
         }
         if(this.icon != null)
@@ -66,7 +66,7 @@ public class IconButton extends Button
         }
         if(!message.isEmpty())
         {
-            fontRenderer.drawStringWithShadow(message, this.x + this.width / 2 - combinedWidth / 2 + 10 + 2, this.y + 6, 0xFFFFFF);
+            fontRenderer.drawStringWithShadow(message, this.x + this.width / 2 - combinedWidth / 2 + 10 + (this.icon == null ? 0 : 4), this.y + 6, 0xFFFFFF);
         }
     }
 
