@@ -57,6 +57,7 @@ public class PathManager
     private InterpolateType rotationInterpolator = InterpolateType.HERMITE;
     private int currentPointIndex;
     private int remainingPointDuration;
+    private boolean visible = true;
     private boolean playing;
     private int duration = 100;
     private double prevRoll;
@@ -85,7 +86,7 @@ public class PathManager
 
     public InterpolateType getRotationInterpolator()
     {
-        return rotationInterpolator;
+        return this.rotationInterpolator;
     }
 
     public void setRotationInterpolator(InterpolateType rotationInterpolator)
@@ -111,6 +112,16 @@ public class PathManager
     public void setFov(double fov)
     {
         this.fov = fov;
+    }
+
+    public boolean isVisible()
+    {
+        return this.visible;
+    }
+
+    public void setVisible(boolean visible)
+    {
+        this.visible = visible;
     }
 
     /**
@@ -423,7 +434,7 @@ public class PathManager
     @SubscribeEvent
     public void renderWorld(RenderWorldLastEvent event)
     {
-        if(this.isPlaying())
+        if(this.isPlaying() || !this.isVisible())
         {
             return;
         }
@@ -558,7 +569,7 @@ public class PathManager
     @Nullable
     private static PathPoint getHoveredPathPoint()
     {
-        if(PathManager.get().isPlaying())
+        if(PathManager.get().isPlaying() || PathManager.get().isVisible())
         {
             return null;
         }

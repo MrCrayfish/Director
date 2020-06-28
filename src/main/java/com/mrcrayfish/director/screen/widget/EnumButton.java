@@ -1,30 +1,21 @@
 package com.mrcrayfish.director.screen.widget;
 
-import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.resources.I18n;
 
 /**
  * Author: MrCrayfish
  */
-public class EnumButton<T extends Enum> extends Button
+public class EnumButton<T extends Enum> extends IconButton
 {
-    private String messageKey = null;
     private Class<T> enumClass;
     private T currentEnum;
 
     public EnumButton(int x, int y, int width, int height, Class<T> enumClass, T initialEnum, IPressable pressable)
     {
-        super(x, y, width, height, "", pressable);
+        super(x, y, width, height, initialEnum instanceof IIconProvider ? ((IIconProvider) initialEnum).getIcon() : null, pressable);
         this.enumClass = enumClass;
         this.currentEnum = initialEnum;
         this.updateLabel();
-    }
-
-    public EnumButton<T> setMessageKey(String messageKey)
-    {
-        this.messageKey = messageKey;
-        this.updateLabel();
-        return this;
     }
 
     @Override
@@ -48,7 +39,10 @@ public class EnumButton<T extends Enum> extends Button
 
     private void updateLabel()
     {
-        String name = I18n.format("director.enum." + this.enumClass.getSimpleName().toLowerCase() + "." + this.currentEnum.name().toLowerCase());
-        this.setMessage(this.messageKey == null ? name : I18n.format(this.messageKey, name));
+        this.setMessage(I18n.format("director.enum." + this.enumClass.getSimpleName().toLowerCase() + "." + this.currentEnum.name().toLowerCase()));
+        if(this.currentEnum instanceof IIconProvider)
+        {
+            this.setIcon(((IIconProvider) this.currentEnum).getIcon());
+        }
     }
 }

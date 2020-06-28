@@ -23,7 +23,11 @@ public enum Icons
     SHARE,
     PLUS,
     LEFT_ARROW,
-    RESET;
+    RESET,
+    SMOOTH,
+    LINEAR,
+    ROTATION,
+    PATH;
 
     public int getU()
     {

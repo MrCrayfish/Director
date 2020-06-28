@@ -5,6 +5,7 @@
     "director.button.import_path": "Import Path",
     "director.button.export_path": "Export Path",
     "director.button.delete_path": "Delete Path",
+    "director.button.visibility": "Visibility",
     "director.button.path_settings": "Path Settings",
     "director.button.reposition": "Reposition",
     "director.button.change_values": "Change Values",
@@ -12,8 +13,8 @@
     "director.button.delete_waypoint": "Delete Waypoint",
     "director.button.insert_after": "Insert Waypoint After",
     "director.button.reset_smoothness": "Reset Smoothness",
-    "director.button.position_interpolate": "§6§lPosition:§r %s",
-    "director.button.rotation_interpolate": "§6§lRotation:§r %s",
+    "director.button.position_interpolate": "Position Interpolation",
+    "director.button.rotation_interpolate": "Rotation Interpolation",
     "director.enum.interpolatetype.linear": "Linear",
     "director.enum.interpolatetype.hermite": "Smooth"
 }

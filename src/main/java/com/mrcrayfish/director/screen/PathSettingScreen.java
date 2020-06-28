@@ -1,5 +1,6 @@
 package com.mrcrayfish.director.screen;
 
+import com.mrcrayfish.director.Icons;
 import com.mrcrayfish.director.path.PathManager;
 import com.mrcrayfish.director.path.interpolator.InterpolateType;
 import com.mrcrayfish.director.screen.widget.EnumButton;
@@ -25,14 +26,14 @@ public class PathSettingScreen extends AbstractMenuScreen
     @SuppressWarnings("unchecked")
     protected void loadWidgets(List<Widget> widgets)
     {
-        widgets.add(new EnumButton<>(0, 0, 100, 20, InterpolateType.class, PathManager.get().getPositionInterpolator(), button -> {
+        widgets.add(new EnumButton<>(0, 0, 60, 20, InterpolateType.class, PathManager.get().getPositionInterpolator(), button -> {
             PathManager.get().setPositionInterpolator(((EnumButton<InterpolateType>) button).getCurrentEnum());
             PathManager.get().updateLengthAndSteps();
-        }).setMessageKey("director.button.position_interpolate"));
+        }).setDescription("director.button.position_interpolate").setIcon(Icons.PATH));
 
-        widgets.add(new EnumButton<>(0, 0, 100, 20, InterpolateType.class, PathManager.get().getRotationInterpolator(), button -> {
+        widgets.add(new EnumButton<>(0, 0, 60, 20, InterpolateType.class, PathManager.get().getRotationInterpolator(), button -> {
             PathManager.get().setRotationInterpolator(((EnumButton<InterpolateType>) button).getCurrentEnum());
             PathManager.get().updateLengthAndSteps();
-        }).setMessageKey("director.button.rotation_interpolate"));
+        }).setDescription("director.button.rotation_interpolate").setIcon(Icons.ROTATION));
     }
 }
