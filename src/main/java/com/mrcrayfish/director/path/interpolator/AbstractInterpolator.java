@@ -44,6 +44,6 @@ public abstract class AbstractInterpolator
 
     public Supplier<IProperties> propertySupplier()
     {
-        return null;
+        return () -> null;
     }
 }
