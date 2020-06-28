@@ -558,6 +558,11 @@ public class PathManager
     @Nullable
     private static PathPoint getHoveredPathPoint()
     {
+        if(PathManager.get().isPlaying())
+        {
+            return null;
+        }
+
         Minecraft mc = Minecraft.getInstance();
         if(mc.player == null || !mc.player.isSpectator())
         {
