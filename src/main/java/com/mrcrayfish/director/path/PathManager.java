@@ -569,7 +569,7 @@ public class PathManager
     @Nullable
     private static PathPoint getHoveredPathPoint()
     {
-        if(PathManager.get().isPlaying() || PathManager.get().isVisible())
+        if(PathManager.get().isPlaying() || !PathManager.get().isVisible())
         {
             return null;
         }
