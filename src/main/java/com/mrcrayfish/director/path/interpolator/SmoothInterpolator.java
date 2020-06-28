@@ -23,11 +23,6 @@ import java.util.function.Supplier;
  */
 public class SmoothInterpolator extends AbstractInterpolator
 {
-    public SmoothInterpolator(List<PathPoint> points)
-    {
-        super(points);
-    }
-
     @Override
     public Supplier<IProperties> propertySupplier()
     {
@@ -105,7 +100,7 @@ public class SmoothInterpolator extends AbstractInterpolator
          * the length of a hermite spline, so this is the next best thing. */
         int start = Math.min(startIndex, endIndex);
         int end = Math.max(startIndex, endIndex);
-        if(start < 0 && end >= this.points.size())
+        if(start < 0 && end >= this.getPointCount())
         {
             return 0.0;
         }
@@ -137,8 +132,8 @@ public class SmoothInterpolator extends AbstractInterpolator
         double s2 = ((Properties) p2.getProperties()).getSmoothness();
         double s3 = ((Properties) p3.getProperties()).getSmoothness();
         double s4 = ((Properties) p4.getProperties()).getSmoothness();
-        double in = this.control(v2, v3, v4, s2, s3, s4, true, index + 1 == this.points.size() - 1, inTension, inContinuity, inBias, 0, 0);
-        double out = this.control(v1, v2, v3, s1, s2, s3, false, index == 0 || index == this.points.size() - 1, outTension, outContinuity, outBias, 0, 0);
+        double in = this.control(v2, v3, v4, s2, s3, s4, true, index + 1 == this.getPointCount() - 1, inTension, inContinuity, inBias, 0, 0);
+        double out = this.control(v1, v2, v3, s1, s2, s3, false, index == 0 || index == this.getPointCount() - 1, outTension, outContinuity, outBias, 0, 0);
         return this.point(v2, v3, out, in, p);
     }
 

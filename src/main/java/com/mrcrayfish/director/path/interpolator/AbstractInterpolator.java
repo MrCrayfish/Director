@@ -1,6 +1,7 @@
 package com.mrcrayfish.director.path.interpolator;
 
 import com.mrcrayfish.director.path.IProperties;
+import com.mrcrayfish.director.path.PathManager;
 import com.mrcrayfish.director.path.PathPoint;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
@@ -16,16 +17,15 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractInterpolator
 {
-    protected List<PathPoint> points;
-
-    public AbstractInterpolator(List<PathPoint> points)
-    {
-        this.points = points;
-    }
-
     protected PathPoint getPoint(int index)
     {
-        return this.points.get(MathHelper.clamp(index, 0, this.points.size() - 1));
+        List<PathPoint> points = PathManager.get().getPoints();
+        return points.get(MathHelper.clamp(index, 0, points.size() - 1));
+    }
+
+    protected int getPointCount()
+    {
+        return PathManager.get().getPoints().size();
     }
 
     public abstract Vec3d pos(int index, float progress);

@@ -11,5 +11,9 @@
     "director.button.modify_curve": "Modify Curve",
     "director.button.delete_waypoint": "Delete Waypoint",
     "director.button.insert_after": "Insert Waypoint After",
-    "director.button.reset_smoothness": "Reset Smoothness"
+    "director.button.reset_smoothness": "Reset Smoothness",
+    "director.button.position_interpolate": "§6§lPosition:§r %s",
+    "director.button.rotation_interpolate": "§6§lRotation:§r %s",
+    "director.enum.interpolatetype.linear": "Linear",
+    "director.enum.interpolatetype.hermite": "Smooth"
 }

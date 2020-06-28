@@ -22,7 +22,7 @@ public class PathPoint
     public PathPoint(PlayerEntity player, PathManager manager)
     {
         this.update(player, manager);
-        this.properties = manager.getInterpolator().propertySupplier().get();
+        this.properties = manager.getPositionInterpolator().get().propertySupplier().get();
     }
 
     public void update(PlayerEntity player, PathManager manager)

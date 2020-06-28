@@ -1,4 +1,4 @@
-package com.mrcrayfish.director.screen;
+package com.mrcrayfish.director.screen.widget;
 
 import com.mrcrayfish.director.Director;
 import com.mrcrayfish.director.Icons;

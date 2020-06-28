@@ -4,6 +4,7 @@ import com.mrcrayfish.director.Icons;
 import com.mrcrayfish.director.path.PathManager;
 import com.mrcrayfish.director.path.PathPoint;
 import com.mrcrayfish.director.path.interpolator.SmoothInterpolator;
+import com.mrcrayfish.director.screen.widget.ImprovedSlider;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.util.math.MathHelper;

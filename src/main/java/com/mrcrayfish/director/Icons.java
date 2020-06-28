@@ -1,6 +1,6 @@
 package com.mrcrayfish.director;
 
-import com.mrcrayfish.director.screen.IconButton;
+import com.mrcrayfish.director.screen.widget.IconButton;
 import net.minecraft.client.gui.widget.button.Button;
 
 /**

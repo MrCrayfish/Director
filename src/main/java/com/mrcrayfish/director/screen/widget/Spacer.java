@@ -1,4 +1,4 @@
-package com.mrcrayfish.director.screen;
+package com.mrcrayfish.director.screen.widget;
 
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.widget.Widget;
