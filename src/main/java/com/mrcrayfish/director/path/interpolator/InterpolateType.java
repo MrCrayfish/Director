@@ -5,7 +5,7 @@ package com.mrcrayfish.director.path.interpolator;
  */
 public enum InterpolateType
 {
-    LINEAR(new SmoothInterpolator()),
+    LINEAR(new LinearInterpolator()),
     HERMITE(new SmoothInterpolator());
 
     private AbstractInterpolator interpolator;

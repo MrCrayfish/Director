@@ -27,10 +27,12 @@ public class PathSettingScreen extends AbstractMenuScreen
     {
         widgets.add(new EnumButton<>(0, 0, 100, 20, InterpolateType.class, PathManager.get().getPositionInterpolator(), button -> {
             PathManager.get().setPositionInterpolator(((EnumButton<InterpolateType>) button).getCurrentEnum());
+            PathManager.get().updateLengthAndSteps();
         }).setMessageKey("director.button.position_interpolate"));
 
         widgets.add(new EnumButton<>(0, 0, 100, 20, InterpolateType.class, PathManager.get().getRotationInterpolator(), button -> {
             PathManager.get().setRotationInterpolator(((EnumButton<InterpolateType>) button).getCurrentEnum());
+            PathManager.get().updateLengthAndSteps();
         }).setMessageKey("director.button.rotation_interpolate"));
     }
 }

@@ -1,0 +1,72 @@
+package com.mrcrayfish.director.path.interpolator;
+
+import com.mrcrayfish.director.path.PathPoint;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+
+/**
+ * Author: MrCrayfish
+ */
+public class LinearInterpolator extends AbstractInterpolator
+{
+    @Override
+    public Vec3d pos(int index, float progress)
+    {
+        PathPoint p1 = this.getPoint(index);
+        PathPoint p2 = this.getPoint(index + 1);
+        double pX = this.apply(p1.getX(), p2.getX(), progress);
+        double pY = this.apply(p1.getY(), p2.getY(), progress);
+        double pZ = this.apply(p1.getZ(), p2.getZ(), progress);
+        return new Vec3d(pX, pY, pZ);
+    }
+
+    @Override
+    public float pitch(int index, float progress)
+    {
+        PathPoint p1 = this.getPoint(index);
+        PathPoint p2 = this.getPoint(index + 1);
+        return (float) this.apply(p1.getPitch(), p2.getPitch(), progress);
+    }
+
+    @Override
+    public float yaw(int index, float progress)
+    {
+        PathPoint p1 = this.getPoint(index);
+        PathPoint p2 = this.getPoint(index + 1);
+        return (float) this.apply(p1.getYaw(), p2.getYaw(), progress);
+    }
+
+    @Override
+    public float roll(int index, float progress)
+    {
+        PathPoint p1 = this.getPoint(index);
+        PathPoint p2 = this.getPoint(index + 1);
+        return (float) this.apply(p1.getRoll(), p2.getRoll(), progress);
+    }
+
+    @Override
+    public double fov(int index, float progress)
+    {
+        PathPoint p1 = this.getPoint(index);
+        PathPoint p2 = this.getPoint(index + 1);
+        return this.apply(p1.getFov(), p2.getFov(), progress);
+    }
+
+    @Override
+    public double length(int startIndex, int endIndex)
+    {
+        double length = 0;
+        for(int i = startIndex; i < endIndex; i++)
+        {
+            Vec3d p1 = this.pos(i, 0F);
+            Vec3d p2 = this.pos(i + 1, 0F);
+            length += p1.distanceTo(p2);
+        }
+        return length;
+    }
+
+    private double apply(double v1, double v2, float progress)
+    {
+        return MathHelper.lerp(progress, v1, v2);
+    }
+}
