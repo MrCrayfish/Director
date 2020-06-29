@@ -46,6 +46,9 @@ public class PathManager
 
     private static PathManager instance;
 
+    /**
+     * Gets the singleton instance of the path manager
+     */
     public static PathManager instance()
     {
         if(instance == null)
@@ -72,16 +75,32 @@ public class PathManager
     private boolean repositioning;
     private boolean insertAfter;
 
+    /**
+     * Gets the list of path points on the current path
+     */
     public List<PathPoint> getPoints()
     {
         return this.points;
     }
 
+    /**
+     * Gets the instance of an {@link AbstractInterpolator} for the specified path type. The position
+     * and rotation of the use separate interpolators for more control.
+     *
+     * @param pathType the type of path
+     * @return an instance of the interpolator
+     */
     public AbstractInterpolator getInterpolator(PathType pathType)
     {
         return pathType == PathType.POSITION ? this.positionInterpolator : this.rotationInterpolator;
     }
 
+    /**
+     * Creates and sets a new interpolator for the specified path type.
+     *
+     * @param interpolateType the type of interpolator
+     * @param pathType        the path type to set the interpolator for
+     */
     public void setInterpolator(InterpolateType interpolateType, PathType pathType)
     {
         AbstractInterpolator interpolator = interpolateType.get(pathType);
@@ -96,31 +115,49 @@ public class PathManager
         }
     }
 
+    /**
+     * Gets the current roll of the camera
+     */
     public double getRoll()
     {
         return this.roll;
     }
 
+    /**
+     * Sets the roll for the camera
+     */
     public void setRoll(double roll)
     {
         this.roll = roll;
     }
 
+    /**
+     * Gets the current additional field of view for the camera
+     */
     public double getFov()
     {
         return this.fov;
     }
 
+    /**
+     * Sets the additional field of view for the camera
+     */
     public void setFov(double fov)
     {
         this.fov = fov;
     }
 
+    /**
+     * Gets the visibility of the path
+     */
     public boolean isVisible()
     {
         return this.visible;
     }
 
+    /**
+     * Sets the visibility of the path. Setting to false will prevent it from rendering
+     */
     public void setVisible(boolean visible)
     {
         this.visible = visible;
@@ -131,6 +168,11 @@ public class PathManager
      */
     public void play()
     {
+        if(!this.isPlayerValidDirector())
+        {
+            return;
+        }
+
         this.repositioning = false;
         this.insertAfter = false;
         this.editingPoint = null;
@@ -156,11 +198,33 @@ public class PathManager
         this.fov = 0;
     }
 
+    /**
+     * Checks if player can be a director. In other words, are they in spectator mode as it's
+     * required for the camera to work correctly.
+     *
+     * @return if the player is a valid director
+     */
+    public boolean isPlayerValidDirector()
+    {
+        Minecraft mc = Minecraft.getInstance();
+        return mc.player != null && mc.player.isSpectator();
+    }
+
+    /**
+     * Checks if the path is currently being played
+     *
+     * @return true if the path is playing
+     */
     public boolean isPlaying()
     {
         return this.playing && this.currentPointIndex < this.points.size() - 1;
     }
 
+    /**
+     * Deletes the specified path point from the path and updates the remaining path points
+     *
+     * @param point the path point to delete
+     */
     public void delete(PathPoint point)
     {
         this.points.remove(point);
@@ -168,8 +232,11 @@ public class PathManager
     }
 
     /**
+     * Begins the transaction of repositioning a point. The will copy the data of the point and
+     * apply it player, such as position, yaw, pitch, etc. Path point is later updated by creating
+     * a new path point.
      *
-     * @param point
+     * @param point the path point to reposition
      */
     public void reposition(PathPoint point)
     {
@@ -180,7 +247,6 @@ public class PathManager
     }
 
     /**
-     *
      * @param point
      */
     public void insertAfter(PathPoint point)
@@ -192,7 +258,7 @@ public class PathManager
     }
 
     /**
-     *
+     * Deletes the entire path, simples!
      */
     public void deletePath()
     {
@@ -213,15 +279,8 @@ public class PathManager
             double[] rotationLengths = new double[this.points.size() - 1];
             for(int i = 0; i < this.points.size() - 1; i++)
             {
-                double positionLength = this.positionInterpolator.length(i, i + 1);
-                positionLengths[i] = positionLength;
-
-                double rotationLength = positionLength;
-                if(this.rotationInterpolator != this.positionInterpolator)
-                {
-                    rotationLength = this.rotationInterpolator.length(i, i + 1);
-                }
-                rotationLengths[i] = rotationLength;
+                positionLengths[i] = this.positionInterpolator.length(i, i + 1);
+                rotationLengths[i] = this.rotationInterpolator.length(i, i + 1);
             }
 
             /* Updates each point's step count based on the connection length over the total length
@@ -240,16 +299,8 @@ public class PathManager
                 float rotationStep = (float) (rotationLengths[i] / p1.getStepCount());
                 for(int j = 0; j < p1.getStepCount(); j++)
                 {
-                    float positionProgress = this.positionInterpolator.progress(i, j * positionStep, positionLengths[i]);
-                    p1.setPositionStep(j, positionProgress);
-
-                    /* Avoid calculating the steps twice if they are the same interpolator */
-                    float rotationProgress = positionProgress;
-                    if(this.rotationInterpolator != this.positionInterpolator)
-                    {
-                        rotationProgress = this.rotationInterpolator.progress(i, j * rotationStep, rotationLengths[i]);
-                    }
-                    p1.setRotationStep(j, rotationProgress);
+                    p1.setPositionStep(j, this.positionInterpolator.progress(i, j * positionStep, positionLengths[i]));
+                    p1.setRotationStep(j, this.rotationInterpolator.progress(i, j * rotationStep, rotationLengths[i]));
                 }
             }
         }
@@ -258,9 +309,9 @@ public class PathManager
     @SubscribeEvent
     public void onKeyPress(InputEvent.KeyInputEvent event)
     {
-        Minecraft mc = Minecraft.getInstance();
-        if(mc.world != null && mc.player != null && event.getAction() == GLFW.GLFW_PRESS)
+        if(this.isPlayerValidDirector() && event.getAction() == GLFW.GLFW_PRESS)
         {
+            Minecraft mc = Minecraft.getInstance();
             if(event.getKey() == GLFW.GLFW_KEY_P) //Add new point
             {
                 if(this.repositioning)
@@ -303,7 +354,16 @@ public class PathManager
     @SubscribeEvent
     public void tick(TickEvent.ClientTickEvent event)
     {
-        if(event.phase != TickEvent.Phase.START) return;
+        if(event.phase != TickEvent.Phase.START)
+        {
+            return;
+        }
+
+        if(this.isPlaying() && !this.isPlayerValidDirector())
+        {
+            this.stop();
+            return;
+        }
 
         this.prevRoll = this.roll;
         this.prevFov = this.fov;
@@ -333,14 +393,26 @@ public class PathManager
         }
     }
 
+    /**
+     * Shows a formatted message to the player. Uses the game bar to display the message.
+     *
+     * @param message the message
+     */
     private void showMessage(String message)
     {
         Minecraft.getInstance().player.sendStatusMessage(new TranslationTextComponent("director.format.message", message), true);
     }
 
-    private void showValue(String name, String value)
+    /**
+     * Shows a formatted value with the ability to set the prefix to the player. Uses the game bar
+     * to display the message.
+     *
+     * @param prefix the prefix
+     * @param value  the value
+     */
+    private void showValue(String prefix, String value)
     {
-        Minecraft.getInstance().player.sendStatusMessage(new TranslationTextComponent("director.format.value", name, value), true);
+        Minecraft.getInstance().player.sendStatusMessage(new TranslationTextComponent("director.format.value", prefix, value), true);
     }
 
     private float getPositionProgress(float partialTicks)
@@ -385,9 +457,14 @@ public class PathManager
 
         if(this.isPlaying())
         {
-            float positionProgress = this.getPositionProgress(event.renderTickTime);
-            //System.out.println("Pos: " + this.currentPointIndex + " " + positionProgress);
+            /* Stop playing if player suddenly can't play during sequence */
+            if(!this.isPlayerValidDirector())
+            {
+                this.stop();
+                return;
+            }
 
+            float positionProgress = this.getPositionProgress(event.renderTickTime);
             float rotationProgress = this.getRotationProgress(event.renderTickTime);
 
             /* Updated the position of the player */
@@ -445,7 +522,7 @@ public class PathManager
     @SubscribeEvent
     public void renderWorld(RenderWorldLastEvent event)
     {
-        if(this.isPlaying() || !this.isVisible())
+        if(this.isPlaying() || !this.isVisible() || !this.isPlayerValidDirector())
         {
             return;
         }
@@ -517,6 +594,11 @@ public class PathManager
     @SubscribeEvent
     public void onMouseScroll(InputEvent.MouseScrollEvent event)
     {
+        if(!this.isPlayerValidDirector())
+        {
+            return;
+        }
+
         long windowId = Minecraft.getInstance().getMainWindow().getHandle();
         if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS)
         {
@@ -536,7 +618,7 @@ public class PathManager
     public void onRawMouseInput(InputEvent.RawMouseEvent event)
     {
         Minecraft mc = Minecraft.getInstance();
-        if(mc.loadingGui != null || mc.currentScreen != null || !mc.mouseHelper.isMouseGrabbed() || mc.player == null || !mc.player.isSpectator())
+        if(mc.loadingGui != null || mc.currentScreen != null || !mc.mouseHelper.isMouseGrabbed() || !this.isPlayerValidDirector())
         {
             return;
         }
@@ -583,19 +665,21 @@ public class PathManager
         return getHoveredPathPoint() != null;
     }
 
+    /**
+     * Gets the path point the player is currently hovering with their crosshair
+     *
+     * @return the hovered path point or null if not looking at anything
+     */
     @Nullable
     private static PathPoint getHoveredPathPoint()
     {
-        if(PathManager.instance().isPlaying() || !PathManager.instance().isVisible())
+        PathManager manager = PathManager.instance();
+        if(manager.isPlaying() || !manager.isVisible() || !manager.isPlayerValidDirector())
         {
             return null;
         }
 
         Minecraft mc = Minecraft.getInstance();
-        if(mc.player == null || !mc.player.isSpectator())
-        {
-            return null;
-        }
 
         /* Setup the start and end vec of the ray trace */
         double reachDistance = mc.player.getAttribute(PlayerEntity.REACH_DISTANCE).getValue();

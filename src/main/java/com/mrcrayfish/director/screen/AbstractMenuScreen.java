@@ -1,11 +1,10 @@
 package com.mrcrayfish.director.screen;
 
 import com.mrcrayfish.director.Icons;
+import com.mrcrayfish.director.path.PathManager;
 import com.mrcrayfish.director.screen.widget.IconButton;
 import com.mrcrayfish.director.screen.widget.Spacer;
 import com.mrcrayfish.director.util.ScreenUtil;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.resources.I18n;
@@ -16,7 +15,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Author: MrCrayfish
@@ -70,6 +68,16 @@ public abstract class AbstractMenuScreen extends Screen
     protected abstract void loadWidgets(List<Widget> widgets);
 
     @Override
+    public void tick()
+    {
+        /* Close any menu if can't play a path*/
+        if(!PathManager.instance().isPlayerValidDirector())
+        {
+            this.onClose();
+        }
+    }
+
+    @Override
     public void render(int mouseX, int mouseY, float partialTicks)
     {
         this.fillGradient(0, this.height / 2, this.width, this.height, 0x00000000, 0xAA000000);
@@ -97,11 +105,5 @@ public abstract class AbstractMenuScreen extends Screen
             int width = this.minecraft.fontRenderer.getStringWidth(description);
             this.drawString(this.minecraft.fontRenderer, description, this.width / 2 - width / 2, startY - 12, 0xFFFFFF);
         }
-    }
-
-    @Override
-    public Optional<IGuiEventListener> getEventListenerForPos(double mouseX, double mouseY)
-    {
-        return super.getEventListenerForPos(mouseX, mouseY);
     }
 }
