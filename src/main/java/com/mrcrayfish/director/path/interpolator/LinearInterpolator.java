@@ -9,6 +9,11 @@ import net.minecraft.util.math.Vec3d;
  */
 public class LinearInterpolator extends AbstractInterpolator
 {
+    public LinearInterpolator(InterpolateType interpolateType, PathType pathType)
+    {
+        super(interpolateType, pathType);
+    }
+
     @Override
     public Vec3d pos(int index, float progress)
     {
@@ -63,6 +68,12 @@ public class LinearInterpolator extends AbstractInterpolator
             length += p1.distanceTo(p2);
         }
         return length;
+    }
+
+    @Override
+    public float progress(int index, double distance, double length)
+    {
+        return (float) (distance / length);
     }
 
     private double apply(double v1, double v2, float progress)

@@ -17,15 +17,34 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractInterpolator
 {
+    private final InterpolateType type;
+    private final PathType pathType;
+
+    public AbstractInterpolator(InterpolateType type, PathType pathType)
+    {
+        this.type = type;
+        this.pathType = pathType;
+    }
+
+    public InterpolateType getType()
+    {
+        return this.type;
+    }
+
+    public PathType getPathType()
+    {
+        return this.pathType;
+    }
+
     protected PathPoint getPoint(int index)
     {
-        List<PathPoint> points = PathManager.get().getPoints();
+        List<PathPoint> points = PathManager.instance().getPoints();
         return points.get(MathHelper.clamp(index, 0, points.size() - 1));
     }
 
     protected int getPointCount()
     {
-        return PathManager.get().getPoints().size();
+        return PathManager.instance().getPoints().size();
     }
 
     public abstract Vec3d pos(int index, float progress);
@@ -39,6 +58,8 @@ public abstract class AbstractInterpolator
     public abstract double fov(int index, float progress);
 
     public abstract double length(int startIndex, int endIndex);
+
+    public abstract float progress(int index, double distance, double length);
 
     public void loadEditPointWidgets(List<Widget> widgets, PathPoint point, @Nullable Screen parent) {}
 

@@ -14,6 +14,6 @@ public class Director
 
     public Director()
     {
-        MinecraftForge.EVENT_BUS.register(PathManager.get());
+        MinecraftForge.EVENT_BUS.register(PathManager.instance());
     }
 }

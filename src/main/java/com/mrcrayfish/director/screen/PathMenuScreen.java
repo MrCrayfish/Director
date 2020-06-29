@@ -26,10 +26,10 @@ public class PathMenuScreen extends AbstractMenuScreen
         widgets.add(Icons.EXPORT.createButton(0, 0, button -> {}).setDescription("director.button.export_path"));
         widgets.add(Spacer.of(5));
 
-        Icons visible = PathManager.get().isVisible() ? Icons.VISIBILITY_ON : Icons.VISIBILITY_OFF;
+        Icons visible = PathManager.instance().isVisible() ? Icons.VISIBILITY_ON : Icons.VISIBILITY_OFF;
         widgets.add(visible.createButton(0, 0, button -> {
-            PathManager.get().setVisible(!PathManager.get().isVisible());
-            ((IconButton) button).setIcon(PathManager.get().isVisible() ? Icons.VISIBILITY_ON : Icons.VISIBILITY_OFF);
+            PathManager.instance().setVisible(!PathManager.instance().isVisible());
+            ((IconButton) button).setIcon(PathManager.instance().isVisible() ? Icons.VISIBILITY_ON : Icons.VISIBILITY_OFF);
         }).setDescription("director.button.visibility"));
 
         widgets.add(Icons.WRENCH.createButton(0, 0, button -> {
@@ -39,7 +39,7 @@ public class PathMenuScreen extends AbstractMenuScreen
         widgets.add(Spacer.of(5));
 
         widgets.add(Icons.BIN.createButton(0, 0, button -> {
-            PathManager.get().deletePath();
+            PathManager.instance().deletePath();
             this.onClose();
         }).setDescription("director.button.delete_path"));
     }

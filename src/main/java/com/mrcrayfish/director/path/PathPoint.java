@@ -1,7 +1,11 @@
 package com.mrcrayfish.director.path;
 
+import com.mrcrayfish.director.path.interpolator.InterpolateType;
+import com.mrcrayfish.director.path.interpolator.PathType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
+
+import java.util.EnumMap;
 
 /**
  * Author: MrCrayfish
@@ -16,13 +20,15 @@ public class PathPoint
     private double roll;
     private double fov;
     private double originalFov;
-    private float[] steps;
-    private IProperties properties;
+    private float[] positionSteps;
+    private float[] rotationSteps;
+
+    private EnumMap<InterpolateType, IProperties> positionProperties = new EnumMap<>(InterpolateType.class);
+    private EnumMap<InterpolateType, IProperties> rotationProperties = new EnumMap<>(InterpolateType.class);
 
     public PathPoint(PlayerEntity player, PathManager manager)
     {
         this.update(player, manager);
-        this.properties = manager.getPositionInterpolator().get().propertySupplier().get();
     }
 
     public void update(PlayerEntity player, PathManager manager)
@@ -86,26 +92,48 @@ public class PathPoint
 
     public int getStepCount()
     {
-        return this.steps.length;
+        return this.positionSteps.length;
     }
 
     public void setStepCount(int duration)
     {
-        this.steps = new float[duration];
+        this.positionSteps = new float[duration];
+        this.rotationSteps = new float[duration];
     }
 
-    public void setStep(int index, float progress)
+    public void setPositionStep(int index, float progress)
     {
-        this.steps[index] = progress;
+        this.positionSteps[index] = progress;
     }
 
-    public float getStep(int index)
+    public float getPositionStep(int index)
     {
-        return this.steps[index];
+        return this.positionSteps[index];
     }
 
-    public IProperties getProperties()
+    public void setRotationStep(int index, float progress)
     {
-        return this.properties;
+        this.rotationSteps[index] = progress;
+    }
+
+    public float getRotationStep(int index)
+    {
+        return this.rotationSteps[index];
+    }
+
+    public IProperties getProperties(InterpolateType interpolateType, PathType pathType)
+    {
+        EnumMap<InterpolateType, IProperties> properties = pathType == PathType.POSITION ? this.positionProperties : this.rotationProperties;
+        return properties.computeIfAbsent(interpolateType, type -> PathManager.instance().getInterpolator(pathType).propertySupplier().get());
+    }
+
+    public IProperties getPositionProperties(InterpolateType type)
+    {
+        return this.positionProperties.computeIfAbsent(type, type1 -> PathManager.instance().getInterpolator(PathType.POSITION).propertySupplier().get());
+    }
+
+    public IProperties getRotationProperties(InterpolateType type)
+    {
+        return this.rotationProperties.computeIfAbsent(type, type1 -> PathManager.instance().getInterpolator(PathType.ROTATION).propertySupplier().get());
     }
 }

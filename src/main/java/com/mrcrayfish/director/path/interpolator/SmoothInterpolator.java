@@ -23,6 +23,11 @@ import java.util.function.Supplier;
  */
 public class SmoothInterpolator extends AbstractInterpolator
 {
+    public SmoothInterpolator(InterpolateType interpolateType, PathType pathType)
+    {
+        super(interpolateType, pathType);
+    }
+
     @Override
     public Supplier<IProperties> propertySupplier()
     {
@@ -44,9 +49,9 @@ public class SmoothInterpolator extends AbstractInterpolator
         PathPoint p2 = this.getPoint(index);
         PathPoint p3 = this.getPoint(index + 1);
         PathPoint p4 = this.getPoint(index + 2);
-        double pX = this.apply(index, p1.getX(), p2.getX(), p3.getX(), p4.getX(), p1, p2, p3, p4, progress);
-        double pY = this.apply(index, p1.getY(), p2.getY(), p3.getY(), p4.getY(), p1, p2, p3, p4, progress);
-        double pZ = this.apply(index, p1.getZ(), p2.getZ(), p3.getZ(), p4.getZ(), p1, p2, p3, p4, progress);
+        double pX = this.apply(index, p1.getX(), p2.getX(), p3.getX(), p4.getX(), p2, p3, progress);
+        double pY = this.apply(index, p1.getY(), p2.getY(), p3.getY(), p4.getY(), p2, p3, progress);
+        double pZ = this.apply(index, p1.getZ(), p2.getZ(), p3.getZ(), p4.getZ(), p2, p3, progress);
         return new Vec3d(pX, pY, pZ);
     }
 
@@ -57,7 +62,7 @@ public class SmoothInterpolator extends AbstractInterpolator
         PathPoint p2 = this.getPoint(index);
         PathPoint p3 = this.getPoint(index + 1);
         PathPoint p4 = this.getPoint(index + 2);
-        return (float) this.apply(index, p1.getPitch(), p2.getPitch(), p3.getPitch(), p4.getPitch(), p1, p2, p3, p4, progress);
+        return (float) this.apply(index, p1.getPitch(), p2.getPitch(), p3.getPitch(), p4.getPitch(), p2, p3, progress);
     }
 
     @Override
@@ -69,7 +74,7 @@ public class SmoothInterpolator extends AbstractInterpolator
         PathPoint p4 = this.getPoint(index + 2);
         //Left this here just in case I need it in the future. I tested without it though and it's working fine.
         //float yawDistance = MathHelper.wrapSubtractDegrees((float) p1.getYaw(), (float) p2.getYaw());
-        return (float) this.apply(index, p1.getYaw(), p2.getYaw(), p3.getYaw(), p4.getYaw(), p1, p2, p3, p4, progress);
+        return (float) this.apply(index, p1.getYaw(), p2.getYaw(), p3.getYaw(), p4.getYaw(), p2, p3, progress);
         //return (float) (p2.getYaw() + (p3.getYaw() - p2.getYaw()) * progress);
     }
 
@@ -80,7 +85,7 @@ public class SmoothInterpolator extends AbstractInterpolator
         PathPoint p2 = this.getPoint(index);
         PathPoint p3 = this.getPoint(index + 1);
         PathPoint p4 = this.getPoint(index + 2);
-        return (float) this.apply(index, p1.getRoll(), p2.getRoll(), p3.getRoll(), p4.getRoll(), p1, p2, p3, p4, progress);
+        return (float) this.apply(index, p1.getRoll(), p2.getRoll(), p3.getRoll(), p4.getRoll(), p2, p3, progress);
     }
 
     @Override
@@ -90,13 +95,13 @@ public class SmoothInterpolator extends AbstractInterpolator
         PathPoint p2 = this.getPoint(index);
         PathPoint p3 = this.getPoint(index + 1);
         PathPoint p4 = this.getPoint(index + 2);
-        return this.apply(index, p1.getFov(), p2.getFov(), p3.getFov(), p4.getFov(), p1, p2, p3, p4, progress);
+        return this.apply(index, p1.getFov(), p2.getFov(), p3.getFov(), p4.getFov(), p2, p3, progress);
     }
 
     @Override
     public double length(int startIndex, int endIndex)
     {
-        /* A simple method to approximate the length between two points. There is no formula to get
+        /* A simple method to approximate the length between two points. There is no formula to instance
          * the length of a hermite spline, so this is the next best thing. */
         int start = Math.min(startIndex, endIndex);
         int end = Math.max(startIndex, endIndex);
@@ -120,7 +125,74 @@ public class SmoothInterpolator extends AbstractInterpolator
         return pathLength;
     }
 
-    private double apply(int index, double v1, double v2, double v3, double v4, PathPoint p1, PathPoint p2, PathPoint p3, PathPoint p4, double p)
+    @Override
+    public float progress(int index, double distance, double length)
+    {
+        return this.getProgressForDistance(100, index, 0, distance, 0.0F, 1.0F);
+    }
+
+    /**
+     * Gets the rough progress required to reach the target distance. This method uses recursive
+     * subdivision to approximately find a suitable value, which to the user appears correct.
+     *
+     * @param limit          the maximum amount of times this method can call itself
+     * @param index          the path index
+     * @param startDistance  the starting distance of the search
+     * @param targetDistance the target distance to find
+     * @param startProgress  the start progress of the search
+     * @param endProgress    the end progress of the search
+     * @return an approximate progress value to obtain the target distance
+     */
+    private float getProgressForDistance(int limit, int index, double startDistance, double targetDistance, float startProgress, float endProgress)
+    {
+        if(limit <= 0)
+        {
+            return startProgress;
+        }
+
+        float tailProgress = 0;
+        float headProgress = 0;
+        double distance = startDistance;
+        Vec3d lastPos = this.pos(index, startProgress);
+        float step = (endProgress - startProgress) / 10F;
+        for(int i = 0; i <= 10; i++)
+        {
+            float progress = i * step;
+            Vec3d pos = this.pos(index, startProgress + progress);
+            distance += pos.distanceTo(lastPos);
+            lastPos = pos;
+            if(distance < targetDistance)
+            {
+                tailProgress = progress;
+                startDistance = distance;
+            }
+            else if(distance > targetDistance && headProgress == 0)
+            {
+                headProgress = progress;
+            }
+            if(Math.abs(targetDistance - distance) < 0.001)
+            {
+                return startProgress + progress;
+            }
+        }
+        return this.getProgressForDistance(limit - 1, index, startDistance, targetDistance, startProgress + tailProgress, startProgress + headProgress);
+    }
+
+    /**
+     * Applies the hermite algorithm to the specified values. The calculation requires at least four
+     * values for it to produce a result.
+     *
+     * @param index the path point index (n)
+     * @param v1    a value from the n - 1 path point
+     * @param v2    a value from the n path point
+     * @param v3    a value from the n + 1 path point
+     * @param v4    a value from the n + 2 path point
+     * @param p1    the instance of n path point
+     * @param p2    the instance of n + 1 path point
+     * @param p     the progress between n and n + 1 which should be from 0.0 to 1.0
+     * @return a calculated hermite value
+     */
+    private double apply(int index, double v1, double v2, double v3, double v4, PathPoint p1, PathPoint p2, double p)
     {
         double inTension = 0.0;
         double inContinuity = 0.0;
@@ -128,12 +200,10 @@ public class SmoothInterpolator extends AbstractInterpolator
         double outTension = 0.0;
         double outContinuity = 0.0;
         double outBias = 0.0;
-        double s1 = ((Properties) p1.getProperties()).getSmoothness();
-        double s2 = ((Properties) p2.getProperties()).getSmoothness();
-        double s3 = ((Properties) p3.getProperties()).getSmoothness();
-        double s4 = ((Properties) p4.getProperties()).getSmoothness();
-        double in = this.control(v2, v3, v4, s2, s3, s4, true, index + 1 == this.getPointCount() - 1, inTension, inContinuity, inBias, 0, 0);
-        double out = this.control(v1, v2, v3, s1, s2, s3, false, index == 0 || index == this.getPointCount() - 1, outTension, outContinuity, outBias, 0, 0);
+        double s1 = ((Properties) p1.getProperties(this.getType(), this.getPathType())).getSmoothness();
+        double s2 = ((Properties) p2.getProperties(this.getType(), this.getPathType())).getSmoothness();
+        double in = this.control(v2, v3, v4, s2, true, index + 1 == this.getPointCount() - 1, inTension, inContinuity, inBias);
+        double out = this.control(v1, v2, v3, s1, false, index == 0 || index == this.getPointCount() - 1, outTension, outContinuity, outBias);
         return this.point(v2, v3, out, in, p);
     }
 
@@ -144,7 +214,7 @@ public class SmoothInterpolator extends AbstractInterpolator
      * @param p2 the ending value
      * @param t1 the starting control/tangent
      * @param t2 the ending control/tangent
-     * @param s a value between 0 and 1
+     * @param s  a value between 0 and 1
      * @return a number
      */
     private double point(double p1, double p2, double t1, double t2, double s)
@@ -171,28 +241,38 @@ public class SmoothInterpolator extends AbstractInterpolator
      * @param bias       the bias or the direction of the curve as it passes through
      * @return a control for the tangent
      */
-    private double control(double p1, double p2, double p3, double s1, double s2, double s3, boolean in, boolean startEnd, double tension, double continuity, double bias, int previousTicks, int ticks)
+    private double control(double p1, double p2, double p3, double s1, boolean in, boolean startEnd, double tension, double continuity, double bias)
     {
-        /* Return zero for start and end points to produce a path */
+        /* Return zero for start and end points to produce a better looking path */
         if(startEnd)
         {
             return 0.0;
         }
         double v1 = ((1.0 - tension) * (1.0 - continuity) * (1.0 + bias)) / 2.0;
         double v2 = ((1.0 - tension) * (1.0 + continuity) * (1.0 + bias)) / 2.0;
-        return ((in ? v1 : v2) * (p2 - p1) + (in ? v2 : v1) * (p3 - p2)) * s2;
-        //return c * (in ? (2.0 * previousTicks) / (previousTicks + ticks) : (2.0 * ticks) / (previousTicks + ticks));
+        return ((in ? v1 : v2) * (p2 - p1) + (in ? v2 : v1) * (p3 - p2)) * s1;
     }
 
     public static class Properties implements IProperties
     {
         private double smoothness = 1.0;
 
+        /**
+         * Sets the smoothness of the path point. The higher the value, the more smoother it
+         * moves through the path point.
+         *
+         * @param smoothness the smoothness of this path point
+         */
         public void setSmoothness(double smoothness)
         {
             this.smoothness = smoothness;
         }
 
+        /**
+         * Gets the smoothness of the path point or how tightly it moves through the path point
+         *
+         * @return the smoothness
+         */
         public double getSmoothness()
         {
             return this.smoothness;

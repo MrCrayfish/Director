@@ -2,7 +2,9 @@ package com.mrcrayfish.director.path;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mrcrayfish.director.path.interpolator.AbstractInterpolator;
 import com.mrcrayfish.director.path.interpolator.InterpolateType;
+import com.mrcrayfish.director.path.interpolator.PathType;
 import com.mrcrayfish.director.screen.EditPointScreen;
 import com.mrcrayfish.director.screen.PathMenuScreen;
 import net.minecraft.client.Minecraft;
@@ -13,6 +15,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -43,7 +46,7 @@ public class PathManager
 
     private static PathManager instance;
 
-    public static PathManager get()
+    public static PathManager instance()
     {
         if(instance == null)
         {
@@ -53,8 +56,8 @@ public class PathManager
     }
 
     private List<PathPoint> points = new ArrayList<>();
-    private InterpolateType positionInterpolator = InterpolateType.HERMITE;
-    private InterpolateType rotationInterpolator = InterpolateType.HERMITE;
+    private AbstractInterpolator positionInterpolator = InterpolateType.HERMITE.get(PathType.POSITION);
+    private AbstractInterpolator rotationInterpolator = InterpolateType.HERMITE.get(PathType.ROTATION);
     private int currentPointIndex;
     private int remainingPointDuration;
     private boolean visible = true;
@@ -74,24 +77,23 @@ public class PathManager
         return this.points;
     }
 
-    public InterpolateType getPositionInterpolator()
+    public AbstractInterpolator getInterpolator(PathType pathType)
     {
-        return this.positionInterpolator;
+        return pathType == PathType.POSITION ? this.positionInterpolator : this.rotationInterpolator;
     }
 
-    public void setPositionInterpolator(InterpolateType type)
+    public void setInterpolator(InterpolateType interpolateType, PathType pathType)
     {
-        this.positionInterpolator = type;
-    }
-
-    public InterpolateType getRotationInterpolator()
-    {
-        return this.rotationInterpolator;
-    }
-
-    public void setRotationInterpolator(InterpolateType rotationInterpolator)
-    {
-        this.rotationInterpolator = rotationInterpolator;
+        AbstractInterpolator interpolator = interpolateType.get(pathType);
+        switch(pathType)
+        {
+            case POSITION:
+                this.positionInterpolator = interpolator;
+                break;
+            case ROTATION:
+                this.rotationInterpolator = interpolator;
+                break;
+        }
     }
 
     public double getRoll()
@@ -162,7 +164,7 @@ public class PathManager
     public void delete(PathPoint point)
     {
         this.points.remove(point);
-        this.updateLengthAndSteps();
+        this.updatePathPoints();
     }
 
     /**
@@ -202,33 +204,52 @@ public class PathManager
     /**
      *
      */
-    public void updateLengthAndSteps()
+    public void updatePathPoints()
     {
         if(this.points.size() > 1)
         {
             /* Gets the length of each connection on the path */
-            double[] lengths = new double[this.points.size() - 1];
+            double[] positionLengths = new double[this.points.size() - 1];
+            double[] rotationLengths = new double[this.points.size() - 1];
             for(int i = 0; i < this.points.size() - 1; i++)
             {
-                lengths[i] = this.positionInterpolator.get().length(i, i + 1);
+                double positionLength = this.positionInterpolator.length(i, i + 1);
+                positionLengths[i] = positionLength;
+
+                double rotationLength = positionLength;
+                if(this.rotationInterpolator != this.positionInterpolator)
+                {
+                    rotationLength = this.rotationInterpolator.length(i, i + 1);
+                }
+                rotationLengths[i] = rotationLength;
             }
 
             /* Updates each point's step count based on the connection length over the total length
              * of the path*/
-            double totalLength = Arrays.stream(lengths).sum();
+            double totalLength = Arrays.stream(positionLengths).sum();
             for(int i = 0; i < this.points.size() - 1; i++)
             {
-                this.points.get(i).setStepCount((int) (this.duration * (lengths[i] / totalLength) + 0.5));
+                this.points.get(i).setStepCount((int) (this.duration * (positionLengths[i] / totalLength) + 0.5));
             }
 
-            /* Updates the step length to get to each sub-point */
+            /* Updates the step length to instance to each sub-point */
             for(int i = 0; i < this.points.size() - 1; i++)
             {
                 PathPoint p1 = this.points.get(i);
-                float step = (float) (lengths[i] / p1.getStepCount());
+                float positionStep = (float) (positionLengths[i] / p1.getStepCount());
+                float rotationStep = (float) (rotationLengths[i] / p1.getStepCount());
                 for(int j = 0; j < p1.getStepCount(); j++)
                 {
-                    p1.setStep(j, this.getProgressForDistance(100, i, 0, j * step, 0.0F, 1.0F));
+                    float positionProgress = this.positionInterpolator.progress(i, j * positionStep, positionLengths[i]);
+                    p1.setPositionStep(j, positionProgress);
+
+                    /* Avoid calculating the steps twice if they are the same interpolator */
+                    float rotationProgress = positionProgress;
+                    if(this.rotationInterpolator != this.positionInterpolator)
+                    {
+                        rotationProgress = this.rotationInterpolator.progress(i, j * rotationStep, rotationLengths[i]);
+                    }
+                    p1.setRotationStep(j, rotationProgress);
                 }
             }
         }
@@ -262,7 +283,7 @@ public class PathManager
                     this.points.add(new PathPoint(mc.player, this));
                     this.showMessage("Added a new waypoint!");
                 }
-                this.updateLengthAndSteps();
+                this.updatePathPoints();
             }
             if(event.getKey() == GLFW.GLFW_KEY_I)
             {
@@ -277,41 +298,6 @@ public class PathManager
                 Minecraft.getInstance().displayGuiScreen(new PathMenuScreen());
             }
         }
-    }
-
-    private float getProgressForDistance(int limit, int index, double startDistance, double targetDistance, float startProgress, float endProgress)
-    {
-        if(limit <= 0)
-        {
-            return startProgress;
-        }
-
-        float tailProgress = 0;
-        float headProgress = 0;
-        double distance = startDistance;
-        Vec3d lastPos = this.positionInterpolator.get().pos(index, startProgress);
-        float step = (endProgress - startProgress) / 10F;
-        for(int i = 0; i <= 10; i++)
-        {
-            float progress = i * step;
-            Vec3d pos = this.positionInterpolator.get().pos(index, startProgress + progress);
-            distance += pos.distanceTo(lastPos);
-            lastPos = pos;
-            if(distance < targetDistance)
-            {
-                tailProgress = progress;
-                startDistance = distance;
-            }
-            else if(distance > targetDistance && headProgress == 0)
-            {
-                headProgress = progress;
-            }
-            if(Math.abs(targetDistance - distance) < 0.001)
-            {
-                return startProgress + progress;
-            }
-        }
-        return this.getProgressForDistance(limit - 1, index, startDistance, targetDistance, startProgress + tailProgress, startProgress + headProgress);
     }
 
     @SubscribeEvent
@@ -357,18 +343,34 @@ public class PathManager
         Minecraft.getInstance().player.sendStatusMessage(new TranslationTextComponent("director.format.value", name, value), true);
     }
 
-    private float getProgress(float partialTicks)
+    private float getPositionProgress(float partialTicks)
     {
         if(this.currentPointIndex >= 0 && this.currentPointIndex < this.points.size())
         {
             PathPoint p1 = this.points.get(this.currentPointIndex);
-            float s1 = p1.getStep(p1.getStepCount() - this.remainingPointDuration);
+            float s1 = p1.getPositionStep(p1.getStepCount() - this.remainingPointDuration);
             float s2 = 1.0F;
             if(this.remainingPointDuration - 1 != 0)
             {
-                s2 = p1.getStep(p1.getStepCount() - (this.remainingPointDuration - 1));
+                s2 = p1.getPositionStep(p1.getStepCount() - (this.remainingPointDuration - 1));
             }
-            return s1 + (s2 - s1) * partialTicks;
+            return MathHelper.clamp(s1 + (s2 - s1) * partialTicks, 0.0F, 1.0F);
+        }
+        return 0.0F;
+    }
+
+    private float getRotationProgress(float partialTicks)
+    {
+        if(this.currentPointIndex >= 0 && this.currentPointIndex < this.points.size())
+        {
+            PathPoint p1 = this.points.get(this.currentPointIndex);
+            float s1 = p1.getRotationStep(p1.getStepCount() - this.remainingPointDuration);
+            float s2 = 1.0F;
+            if(this.remainingPointDuration - 1 != 0)
+            {
+                s2 = p1.getRotationStep(p1.getStepCount() - (this.remainingPointDuration - 1));
+            }
+            return MathHelper.clamp(s1 + (s2 - s1) * partialTicks, 0.0F, 1.0F);
         }
         return 0.0F;
     }
@@ -376,12 +378,20 @@ public class PathManager
     @SubscribeEvent
     public void render(TickEvent.RenderTickEvent event)
     {
+        if(event.phase == TickEvent.Phase.START)
+        {
+            return;
+        }
+
         if(this.isPlaying())
         {
-            float progress = this.getProgress(event.renderTickTime);
+            float positionProgress = this.getPositionProgress(event.renderTickTime);
+            //System.out.println("Pos: " + this.currentPointIndex + " " + positionProgress);
+
+            float rotationProgress = this.getRotationProgress(event.renderTickTime);
 
             /* Updated the position of the player */
-            Vec3d pos = this.positionInterpolator.get().pos(this.currentPointIndex, progress);
+            Vec3d pos = this.positionInterpolator.pos(this.currentPointIndex, positionProgress);
             ClientPlayerEntity player = Minecraft.getInstance().player;
             player.setPosition(pos.x, pos.y, pos.z);
             player.prevPosX = pos.x;
@@ -389,14 +399,15 @@ public class PathManager
             player.prevPosZ = pos.z;
 
             /* Updated the pitch of the player */
-            float pitch = this.rotationInterpolator.get().pitch(this.currentPointIndex, progress);
+            float pitch = this.rotationInterpolator.pitch(this.currentPointIndex, rotationProgress);
             player.rotationPitch = pitch;
             player.prevRotationPitch = pitch;
 
             /* Updated the yaw of the player */
-            float yaw = this.rotationInterpolator.get().yaw(this.currentPointIndex, progress);
+            float yaw = this.rotationInterpolator.yaw(this.currentPointIndex, rotationProgress);
             player.rotationYaw = yaw;
             player.prevRotationYaw = yaw;
+            System.out.println("Rot: " + this.currentPointIndex + " " + yaw);
         }
     }
 
@@ -405,8 +416,8 @@ public class PathManager
     {
         if(this.isPlaying())
         {
-            float progress = this.getProgress((float) event.getRenderPartialTicks());
-            float roll = this.rotationInterpolator.get().roll(this.currentPointIndex, progress);
+            float progress = this.getRotationProgress((float) event.getRenderPartialTicks());
+            float roll = this.rotationInterpolator.roll(this.currentPointIndex, progress);
             event.setRoll(roll);
         }
         else
@@ -420,8 +431,8 @@ public class PathManager
     {
         if(this.isPlaying())
         {
-            float progress = this.getProgress((float) event.getRenderPartialTicks());
-            double fov = this.rotationInterpolator.get().fov(this.currentPointIndex, progress);
+            float progress = this.getRotationProgress((float) event.getRenderPartialTicks());
+            double fov = this.rotationInterpolator.fov(this.currentPointIndex, progress);
             event.setFOV(fov);
         }
         else
@@ -455,10 +466,16 @@ public class PathManager
             PathPoint p1 = this.points.get(i);
             for(int j = 0; j <= p1.getStepCount(); j++)
             {
-                Vec3d v1 = this.positionInterpolator.get().pos(i, j == 0 ? 0.0F : p1.getStep(j - 1));
-                Vec3d v2 = this.positionInterpolator.get().pos(i, j == p1.getStepCount() ? 1.0F : p1.getStep(j));
+                Vec3d v1 = this.positionInterpolator.pos(i, j == 0 ? 0.0F : p1.getPositionStep(j - 1));
+                Vec3d v2 = this.positionInterpolator.pos(i, j == p1.getStepCount() ? 1.0F : p1.getPositionStep(j));
                 builder.pos(lastMatrix, (float) v1.getX(), (float) v1.getY(), (float) v1.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
                 builder.pos(lastMatrix, (float) v2.getX(), (float) v2.getY(), (float) v2.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
+
+                //Renders the rotation path
+                /*Vec3d v3 = this.rotationInterpolator.instance().pos(i, j == 0 ? 0.0F : p1.getRotationStep(j - 1));
+                Vec3d v4 = this.rotationInterpolator.instance().pos(i, j == p1.getStepCount() ? 1.0F : p1.getRotationStep(j));
+                builder.pos(lastMatrix, (float) v3.getX(), (float) v3.getY(), (float) v3.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
+                builder.pos(lastMatrix, (float) v4.getX(), (float) v4.getY(), (float) v4.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();*/
 
                 /*matrixStack.push();
                 matrixStack.translate(v2.getX(), v2.getY(), v2.getZ());
@@ -569,7 +586,7 @@ public class PathManager
     @Nullable
     private static PathPoint getHoveredPathPoint()
     {
-        if(PathManager.get().isPlaying() || !PathManager.get().isVisible())
+        if(PathManager.instance().isPlaying() || !PathManager.instance().isVisible())
         {
             return null;
         }
@@ -587,10 +604,10 @@ public class PathManager
 
         /* Creates axis aligned boxes for all path points then remove ones that aren't close enough to the player */
         double halfBoxSize = POINT_BOX_SIZE / 2;
-        List<Pair<PathPoint, AxisAlignedBB>> pointPairs = PathManager.get().points.stream().map(p -> Pair.of(p, new AxisAlignedBB(p.getX(), p.getY(), p.getZ(), p.getX() + POINT_BOX_SIZE, p.getY() + POINT_BOX_SIZE, p.getZ() + POINT_BOX_SIZE).offset(-halfBoxSize, -halfBoxSize, -halfBoxSize))).collect(Collectors.toList());
+        List<Pair<PathPoint, AxisAlignedBB>> pointPairs = PathManager.instance().points.stream().map(p -> Pair.of(p, new AxisAlignedBB(p.getX(), p.getY(), p.getZ(), p.getX() + POINT_BOX_SIZE, p.getY() + POINT_BOX_SIZE, p.getZ() + POINT_BOX_SIZE).offset(-halfBoxSize, -halfBoxSize, -halfBoxSize))).collect(Collectors.toList());
         pointPairs.removeIf(pair -> pair.getRight().getCenter().distanceTo(startVec) > reachDistance + 1);
 
-        /* Ray trace and get the closest path point */
+        /* Ray trace and instance the closest path point */
         double closestDistance = Double.MAX_VALUE;
         PathPoint closestPoint = null;
         for(Pair<PathPoint, AxisAlignedBB> pair : pointPairs)
