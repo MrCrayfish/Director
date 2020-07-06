@@ -450,7 +450,7 @@ public class PathManager
     @SubscribeEvent
     public void render(TickEvent.RenderTickEvent event)
     {
-        if(event.phase == TickEvent.Phase.START)
+        if(event.phase == TickEvent.Phase.END)
         {
             return;
         }
@@ -484,7 +484,6 @@ public class PathManager
             float yaw = this.rotationInterpolator.yaw(this.currentPointIndex, rotationProgress);
             player.rotationYaw = yaw;
             player.prevRotationYaw = yaw;
-            System.out.println("Rot: " + this.currentPointIndex + " " + yaw);
         }
     }
 
