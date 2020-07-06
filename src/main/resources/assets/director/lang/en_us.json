@@ -13,6 +13,7 @@
     "director.button.delete_waypoint": "Delete Waypoint",
     "director.button.insert_after": "Insert Waypoint After",
     "director.button.reset_smoothness": "Reset Smoothness",
+    "director.button.path_duration": "Path Duration",
     "director.button.position_interpolate": "Position Interpolation",
     "director.button.rotation_interpolate": "Rotation Interpolation",
     "director.enum.interpolatetype.linear": "Linear",

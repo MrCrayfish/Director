@@ -27,7 +27,8 @@ public enum Icons
     SMOOTH,
     LINEAR,
     ROTATION,
-    PATH;
+    PATH,
+    CLOCK;
 
     public int getU()
     {

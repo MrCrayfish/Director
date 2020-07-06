@@ -116,6 +116,22 @@ public class PathManager
     }
 
     /**
+     * Gets the duration of the path
+     */
+    public int getDuration()
+    {
+        return duration;
+    }
+
+    /**
+     * Sets the duration of the path
+     */
+    public void setDuration(int duration)
+    {
+        this.duration = duration;
+    }
+
+    /**
      * Gets the current roll of the camera
      */
     public double getRoll()

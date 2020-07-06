@@ -5,6 +5,8 @@ import com.mrcrayfish.director.path.PathManager;
 import com.mrcrayfish.director.path.interpolator.InterpolateType;
 import com.mrcrayfish.director.path.interpolator.PathType;
 import com.mrcrayfish.director.screen.widget.EnumButton;
+import com.mrcrayfish.director.screen.widget.IconButton;
+import com.mrcrayfish.director.screen.widget.Spacer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -26,6 +28,12 @@ public class PathSettingScreen extends AbstractMenuScreen
     @SuppressWarnings("unchecked")
     protected void loadWidgets(List<Widget> widgets)
     {
+        widgets.add(new IconButton(0, 0, 20, 20, Icons.CLOCK, buttons -> {
+            this.minecraft.displayGuiScreen(new PathDurationScreen(this));
+        }).setDescription("director.button.path_duration"));
+
+        widgets.add(Spacer.of(5));
+
         widgets.add(new EnumButton<>(0, 0, 60, 20, InterpolateType.class, PathManager.instance().getInterpolator(PathType.POSITION).getType(), button -> {
             PathManager.instance().setInterpolator(((EnumButton<InterpolateType>) button).getCurrentEnum(), PathType.POSITION);
             PathManager.instance().updatePathPoints();
