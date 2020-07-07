@@ -4,7 +4,7 @@ issueTrackerURL="http://my.issue.tracker/"
 
 [[mods]]
     modId="director"
-    version="1.0.0"
+    version="0.1.1"
     displayName="Director"
     updateJSONURL="http://myurl.me/"
     displayURL="http://example.com/"
