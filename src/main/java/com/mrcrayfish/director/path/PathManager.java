@@ -7,12 +7,14 @@ import com.mrcrayfish.director.path.interpolator.InterpolateType;
 import com.mrcrayfish.director.path.interpolator.PathType;
 import com.mrcrayfish.director.screen.EditPointScreen;
 import com.mrcrayfish.director.screen.PathMenuScreen;
+import com.mrcrayfish.director.util.EntityRenderUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Matrix4f;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.entity.item.ArmorStandEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
@@ -21,6 +23,7 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -28,6 +31,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -591,6 +595,29 @@ public class PathManager
         Minecraft.getInstance().getRenderTypeBuffers().getBufferSource().finish(RenderType.getLines());
 
         matrixStack.pop();
+    }
+
+    @SubscribeEvent
+    public void renderEntity(RenderLivingEvent.Pre event)
+    {
+        if(!this.isPlayerValidDirector())
+        {
+            return;
+        }
+
+        /* Stops invisible armor stands from rendering while playing a path */
+        if(this.isPlaying() && event.getEntity().isInvisible() && event.getEntity() instanceof ArmorStandEntity)
+        {
+            try
+            {
+                EntityRenderUtil.renderAmourStand((ArmorStandEntity) event.getEntity(), event.getRenderer(), event.getMatrixStack(), event.getBuffers(), event.getLight(), event.getPartialRenderTick());
+            }
+            catch(InvocationTargetException | IllegalAccessException e)
+            {
+                e.printStackTrace();
+            }
+            event.setCanceled(true);
+        }
     }
 
     private float[] getPointColor(int index)
