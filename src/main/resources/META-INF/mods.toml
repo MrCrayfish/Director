@@ -11,7 +11,7 @@ issueTrackerURL="https://github.com/MrCrayfish/Director/issues"
     logoFile="director.png"
     credits="MrCrayfish"
     authors="MrCrayfish"
-    description="A simple camera mod because nothing better exists!"
+    description="A simple camera mod because everything else sucks!"
 
 [[dependencies.director]]
     modId="forge"
