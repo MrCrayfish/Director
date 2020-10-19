@@ -1,6 +1,9 @@
 package com.mrcrayfish.director.screen.widget;
 
 import net.minecraft.client.resources.I18n;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Locale;
 
 /**
  * Author: MrCrayfish
@@ -39,7 +42,8 @@ public class EnumButton<T extends Enum> extends IconButton
 
     private void updateLabel()
     {
-        this.setMessage(I18n.format("director.enum." + this.enumClass.getSimpleName().toLowerCase() + "." + this.currentEnum.name().toLowerCase()));
+        String enumName = StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(this.enumClass.getSimpleName()), "_").toLowerCase(Locale.ENGLISH);
+        this.setMessage(I18n.format("director.enum." + enumName + "." + this.currentEnum.name().toLowerCase()));
         if(this.currentEnum instanceof IIconProvider)
         {
             this.setIcon(((IIconProvider) this.currentEnum).getIcon());
