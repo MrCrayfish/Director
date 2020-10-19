@@ -7,6 +7,7 @@ import com.mrcrayfish.director.screen.AdjustCurveScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
 import javax.annotation.Nullable;
@@ -72,10 +73,11 @@ public class SmoothInterpolator extends AbstractInterpolator
         PathPoint p2 = this.getPoint(index);
         PathPoint p3 = this.getPoint(index + 1);
         PathPoint p4 = this.getPoint(index + 2);
-        //Left this here just in case I need it in the future. I tested without it though and it's working fine.
-        //float yawDistance = MathHelper.wrapSubtractDegrees((float) p1.getYaw(), (float) p2.getYaw());
-        return (float) this.apply(index, p1.getYaw(), p2.getYaw(), p3.getYaw(), p4.getYaw(), p2, p3, progress);
-        //return (float) (p2.getYaw() + (p3.getYaw() - p2.getYaw()) * progress);
+        float y1 = (float) MathHelper.wrapDegrees(p1.getYaw());
+        float y2 = this.applyTargetYawAdjustment(y1, (float) MathHelper.wrapDegrees(p2.getYaw()));
+        float y3 = this.applyTargetYawAdjustment(y2, (float) MathHelper.wrapDegrees(p3.getYaw()));
+        float y4 = this.applyTargetYawAdjustment(y3, (float) MathHelper.wrapDegrees(p4.getYaw()));
+        return (float) this.apply(index, y1, y2, y3, y4, p2, p3, progress);
     }
 
     @Override

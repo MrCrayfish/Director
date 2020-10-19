@@ -38,7 +38,9 @@ public class LinearInterpolator extends AbstractInterpolator
     {
         PathPoint p1 = this.getPoint(index);
         PathPoint p2 = this.getPoint(index + 1);
-        return (float) this.apply(p1.getYaw(), p2.getYaw(), progress);
+        float y1 = (float) MathHelper.wrapDegrees(p1.getYaw());
+        float y2 = this.applyTargetYawAdjustment(y1, (float) MathHelper.wrapDegrees(p2.getYaw()));
+        return (float) this.apply(y1, y2, progress);
     }
 
     @Override

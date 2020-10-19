@@ -67,4 +67,21 @@ public abstract class AbstractInterpolator
     {
         return () -> null;
     }
+
+    protected float applyTargetYawAdjustment(float v1, float v2)
+    {
+        while(Math.abs(v2 - v1) > 180F)
+        {
+            float deltaYaw = v2 - v1;
+            if(deltaYaw > 180F)
+            {
+                v2 -= 360F;
+            }
+            else if(deltaYaw < -180F)
+            {
+                v2 += 360F;
+            }
+        }
+        return v2;
+    }
 }
