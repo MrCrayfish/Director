@@ -18,4 +18,9 @@
     "director.button.rotation_interpolate": "Rotation Interpolation",
     "director.enum.interpolatetype.linear": "Linear",
     "director.enum.interpolatetype.hermite": "Smooth"
+    "key.categories.director": "Director",
+    "key.director.play": "Play Path",
+    "key.director.stop": "Stop Path",
+    "key.director.settings": "Path Settings",
+    "key.director.point": "Add a New Waypoint"
 }

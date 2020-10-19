@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Matrix4f;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.item.ArmorStandEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -27,6 +28,7 @@ import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.glfw.GLFW;
 
@@ -43,6 +45,11 @@ import java.util.stream.Collectors;
  */
 public class PathManager
 {
+    private static final KeyBinding KEY_BIND_PLAY = new KeyBinding("key.director.play", GLFW.GLFW_KEY_I, "key.categories.director");
+    private static final KeyBinding KEY_BIND_STOP = new KeyBinding("key.director.stop", GLFW.GLFW_KEY_O, "key.categories.director");
+    private static final KeyBinding KEY_BIND_SETTINGS = new KeyBinding("key.director.settings", GLFW.GLFW_KEY_U, "key.categories.director");
+    private static final KeyBinding KEY_BIND_POINT = new KeyBinding("key.director.point", GLFW.GLFW_KEY_P, "key.categories.director");
+
     private static final double POINT_BOX_SIZE = 0.5;
     private static final float[] START_POINT_COLOR = {1.0F, 0.18F, 0.0F};
     private static final float[] POINT_COLOR = {1.0F, 0.815F, 0.0F};
@@ -78,6 +85,14 @@ public class PathManager
     private PathPoint editingPoint;
     private boolean repositioning;
     private boolean insertAfter;
+
+    private PathManager()
+    {
+        ClientRegistry.registerKeyBinding(KEY_BIND_PLAY);
+        ClientRegistry.registerKeyBinding(KEY_BIND_STOP);
+        ClientRegistry.registerKeyBinding(KEY_BIND_SETTINGS);
+        ClientRegistry.registerKeyBinding(KEY_BIND_POINT);
+    }
 
     /**
      * Gets the list of path points on the current path
@@ -332,7 +347,7 @@ public class PathManager
         if(this.isPlayerValidDirector() && event.getAction() == GLFW.GLFW_PRESS)
         {
             Minecraft mc = Minecraft.getInstance();
-            if(event.getKey() == GLFW.GLFW_KEY_P) //Add new point
+            if(KEY_BIND_POINT.matchesKey(event.getKey(), event.getScanCode()))
             {
                 if(this.repositioning)
                 {
@@ -356,15 +371,15 @@ public class PathManager
                 }
                 this.updatePathPoints();
             }
-            if(event.getKey() == GLFW.GLFW_KEY_I)
+            else if(KEY_BIND_PLAY.matchesKey(event.getKey(), event.getScanCode()))
             {
                 this.play();
             }
-            if(event.getKey() == GLFW.GLFW_KEY_O)
+            else if(KEY_BIND_STOP.matchesKey(event.getKey(), event.getScanCode()))
             {
                 this.stop();
             }
-            if(event.getKey() == GLFW.GLFW_KEY_GRAVE_ACCENT)
+            else if(KEY_BIND_SETTINGS.matchesKey(event.getKey(), event.getScanCode()))
             {
                 Minecraft.getInstance().displayGuiScreen(new PathMenuScreen());
             }
