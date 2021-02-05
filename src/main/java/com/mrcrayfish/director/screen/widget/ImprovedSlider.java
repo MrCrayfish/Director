@@ -1,6 +1,7 @@
 package com.mrcrayfish.director.screen.widget;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.client.gui.widget.Slider;
 import org.lwjgl.glfw.GLFW;
 
@@ -16,7 +17,7 @@ public class ImprovedSlider extends Slider
 
     public ImprovedSlider(int xPos, int yPos, int width, int height, String prefix, String suf, double minVal, double maxVal, double currentVal, boolean showDec, boolean drawStr, ISlider handler)
     {
-        super(xPos, yPos, width, height, prefix, suf, minVal, maxVal, currentVal, showDec, drawStr, b -> {});
+        super(xPos, yPos, width, height, new StringTextComponent(prefix), new StringTextComponent(suf), minVal, maxVal, currentVal, showDec, drawStr, b -> {});
         this.handler = handler;
     }
 

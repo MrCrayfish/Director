@@ -1,7 +1,9 @@
 package com.mrcrayfish.director.screen.widget;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.util.text.StringTextComponent;
 
 /**
  * Author: MrCrayfish
@@ -10,7 +12,7 @@ public class Spacer extends Widget
 {
     public Spacer(int widthIn)
     {
-        super(0, 0, widthIn, 20, "");
+        super(0, 0, widthIn, 20, StringTextComponent.EMPTY);
     }
 
     public static Spacer of(int width)
@@ -19,9 +21,9 @@ public class Spacer extends Widget
     }
 
     @Override
-    public void renderButton(int mouseX, int mouseY, float partialTicks)
+    public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
     {
-        AbstractGui.fill(this.x + this.width / 2, this.y, this.x + this.width / 2 + 1, this.y + this.height, 0xFF888888);
+        AbstractGui.fill(matrixStack, this.x + this.width / 2, this.y, this.x + this.width / 2 + 1, this.y + this.height, 0xFF888888);
     }
 
     @Override

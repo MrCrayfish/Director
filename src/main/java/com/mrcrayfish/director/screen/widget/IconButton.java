@@ -1,5 +1,6 @@
 package com.mrcrayfish.director.screen.widget;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mrcrayfish.director.Director;
 import com.mrcrayfish.director.Icons;
 import com.mrcrayfish.director.util.ScreenUtil;
@@ -7,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.StringTextComponent;
 
 import javax.annotation.Nullable;
 
@@ -22,7 +24,7 @@ public class IconButton extends Button
 
     public IconButton(int x, int y, int width, int height, Icons icon, IPressable pressable)
     {
-        super(x, y, width, height, "", pressable);
+        super(x, y, width, height, StringTextComponent.EMPTY, pressable);
         this.icon = icon;
     }
 
@@ -44,14 +46,14 @@ public class IconButton extends Button
     }
 
     @Override
-    public void renderButton(int mouseX, int mouseY, float partialTicks)
+    public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
     {
-        super.renderButton(mouseX, mouseY, partialTicks);
+        super.renderButton(matrixStack, mouseX, mouseY, partialTicks);
         Minecraft minecraft = Minecraft.getInstance();
         FontRenderer fontRenderer = minecraft.fontRenderer;
         Minecraft.getInstance().getTextureManager().bindTexture(ICONS_TEXTURE);
         int combinedWidth = this.icon != null ? 10 : 0;
-        String message = this.getMessage().trim();
+        String message = this.getMessage().getUnformattedComponentText().trim();
         if(!message.isEmpty())
         {
             combinedWidth += fontRenderer.getStringWidth(message);
@@ -66,10 +68,7 @@ public class IconButton extends Button
         }
         if(!message.isEmpty())
         {
-            fontRenderer.drawStringWithShadow(message, this.x + this.width / 2 - combinedWidth / 2 + 10 + (this.icon == null ? 0 : 4), this.y + 6, 0xFFFFFF);
+            fontRenderer.drawStringWithShadow(matrixStack, message, this.x + this.width / 2 - combinedWidth / 2 + 10 + (this.icon == null ? 0 : 4), this.y + 6, 0xFFFFFF);
         }
     }
-
-    @Override
-    public void drawCenteredString(FontRenderer fontRenderer, String s, int x, int y, int color) {}
 }

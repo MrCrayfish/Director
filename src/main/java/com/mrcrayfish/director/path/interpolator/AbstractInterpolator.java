@@ -6,7 +6,7 @@ import com.mrcrayfish.director.path.PathPoint;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -47,7 +47,7 @@ public abstract class AbstractInterpolator
         return PathManager.instance().getPoints().size();
     }
 
-    public abstract Vec3d pos(int index, float progress);
+    public abstract Vector3d pos(int index, float progress);
 
     public abstract float pitch(int index, float progress);
 

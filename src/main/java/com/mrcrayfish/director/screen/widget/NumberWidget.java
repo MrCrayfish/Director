@@ -2,6 +2,7 @@ package com.mrcrayfish.director.screen.widget;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.util.text.StringTextComponent;
 
 /**
  * Author: MrCrayfish
@@ -13,7 +14,7 @@ public class NumberWidget extends TextFieldWidget
 
     public NumberWidget(int width)
     {
-        super(Minecraft.getInstance().fontRenderer, 0, 0, width, 20, "");
+        super(Minecraft.getInstance().fontRenderer, 0, 0, width, 20, StringTextComponent.EMPTY);
         this.setValidator(s -> {
             try
             {

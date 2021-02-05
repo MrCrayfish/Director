@@ -1,5 +1,6 @@
 package com.mrcrayfish.director.screen;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mrcrayfish.director.Icons;
 import com.mrcrayfish.director.path.PathManager;
 import com.mrcrayfish.director.screen.widget.IconButton;
@@ -78,20 +79,20 @@ public abstract class AbstractMenuScreen extends Screen
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float partialTicks)
+    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
     {
-        this.fillGradient(0, this.height / 2, this.width, this.height, 0x00000000, 0xAA000000);
+        this.fillGradient(matrixStack, 0, this.height / 2, this.width, this.height, 0x00000000, 0xAA000000);
 
         Pair<Integer, Integer> dimensions = ScreenUtil.getDimensionsForWindow(this.contentWidth, 24);
         int startX = (this.width - dimensions.getLeft()) / 2;
         int startY = (this.height - dimensions.getRight()) - dimensions.getRight() / 2;
         ScreenUtil.drawWindow(startX, startY, dimensions);
-        super.render(mouseX, mouseY, partialTicks);
+        super.render(matrixStack, mouseX, mouseY, partialTicks);
 
         Widget hoveredWidget = null;
         for(Widget widget : this.buttons)
         {
-            if(ScreenUtil.isMouseWithin(mouseX, mouseY, widget.x, widget.y, widget.getWidth(), widget.getHeight()))
+            if(ScreenUtil.isMouseWithin(mouseX, mouseY, widget.x, widget.y, widget.getWidth(), widget.getHeightRealms()))
             {
                 hoveredWidget = widget;
                 break;
@@ -103,7 +104,7 @@ public abstract class AbstractMenuScreen extends Screen
             String descriptionKey = ((IconButton) hoveredWidget).getDescription();
             String description = I18n.format(descriptionKey);
             int width = this.minecraft.fontRenderer.getStringWidth(description);
-            this.drawString(this.minecraft.fontRenderer, description, this.width / 2 - width / 2, startY - 12, 0xFFFFFF);
+            drawString(matrixStack, this.minecraft.fontRenderer, description, this.width / 2 - width / 2, startY - 12, 0xFFFFFF);
         }
     }
 }

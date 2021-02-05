@@ -1,6 +1,7 @@
 modLoader="javafml"
 loaderVersion="[31,)"
 issueTrackerURL="http://my.issue.tracker/"
+license="GPL3"
 
 [[mods]]
     modId="director"

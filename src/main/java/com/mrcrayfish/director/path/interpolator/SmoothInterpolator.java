@@ -8,7 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -44,7 +44,7 @@ public class SmoothInterpolator extends AbstractInterpolator
     }
 
     @Override
-    public Vec3d pos(int index, float progress)
+    public Vector3d pos(int index, float progress)
     {
         PathPoint p1 = this.getPoint(index - 1);
         PathPoint p2 = this.getPoint(index);
@@ -53,7 +53,7 @@ public class SmoothInterpolator extends AbstractInterpolator
         double pX = this.apply(index, p1.getX(), p2.getX(), p3.getX(), p4.getX(), p2, p3, progress);
         double pY = this.apply(index, p1.getY(), p2.getY(), p3.getY(), p4.getY(), p2, p3, progress);
         double pZ = this.apply(index, p1.getZ(), p2.getZ(), p3.getZ(), p4.getZ(), p2, p3, progress);
-        return new Vec3d(pX, pY, pZ);
+        return new Vector3d(pX, pY, pZ);
     }
 
     @Override
@@ -119,8 +119,8 @@ public class SmoothInterpolator extends AbstractInterpolator
             {
                 float step = 1.0F / count;
                 float progress = (float) j / (float) count;
-                Vec3d p1 = this.pos(i, progress);
-                Vec3d p2 = this.pos(i, progress + step);
+                Vector3d p1 = this.pos(i, progress);
+                Vector3d p2 = this.pos(i, progress + step);
                 pathLength += p1.distanceTo(p2);
             }
         }
@@ -155,12 +155,12 @@ public class SmoothInterpolator extends AbstractInterpolator
         float tailProgress = 0;
         float headProgress = 0;
         double distance = startDistance;
-        Vec3d lastPos = this.pos(index, startProgress);
+        Vector3d lastPos = this.pos(index, startProgress);
         float step = (endProgress - startProgress) / 10F;
         for(int i = 0; i <= 10; i++)
         {
             float progress = i * step;
-            Vec3d pos = this.pos(index, startProgress + progress);
+            Vector3d pos = this.pos(index, startProgress + progress);
             distance += pos.distanceTo(lastPos);
             lastPos = pos;
             if(distance < targetDistance)

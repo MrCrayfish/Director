@@ -11,21 +11,21 @@ import com.mrcrayfish.director.util.EntityRenderUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.Matrix4f;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.item.ArmorStandEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -213,7 +213,7 @@ public class PathManager
         this.editingPoint = null;
         if(this.points.size() < 2)
         {
-            Minecraft.getInstance().player.sendMessage(new StringTextComponent("You need at least 2 points to play the path"));
+            Minecraft.getInstance().player.sendMessage(new StringTextComponent("You need at least 2 points to play the path"),  Minecraft.getInstance().player.getUniqueID());
             return;
         }
         Minecraft.getInstance().player.sendChatMessage("/gamemode spectator");
@@ -503,7 +503,7 @@ public class PathManager
             float rotationProgress = this.getRotationProgress(event.renderTickTime);
 
             /* Updated the position of the player */
-            Vec3d pos = this.positionInterpolator.pos(this.currentPointIndex, positionProgress);
+            Vector3d pos = this.positionInterpolator.pos(this.currentPointIndex, positionProgress);
             ClientPlayerEntity player = Minecraft.getInstance().player;
             player.setPosition(pos.x, pos.y, pos.z);
             player.prevPosX = pos.x;
@@ -565,7 +565,7 @@ public class PathManager
         matrixStack.push();
 
         Minecraft mc = Minecraft.getInstance();
-        Vec3d view = mc.gameRenderer.getActiveRenderInfo().getProjectedView();
+        Vector3d view = mc.gameRenderer.getActiveRenderInfo().getProjectedView();
         matrixStack.translate(-view.getX(), -view.getY(), -view.getZ());
 
         AxisAlignedBB pointBox = new AxisAlignedBB(-0.10, -0.10, -0.10, 0.10, 0.10, 0.10);
@@ -577,8 +577,8 @@ public class PathManager
             PathPoint p1 = this.points.get(i);
             for(int j = 0; j <= p1.getStepCount(); j++)
             {
-                Vec3d v1 = this.positionInterpolator.pos(i, j == 0 ? 0.0F : p1.getPositionStep(j - 1));
-                Vec3d v2 = this.positionInterpolator.pos(i, j == p1.getStepCount() ? 1.0F : p1.getPositionStep(j));
+                Vector3d v1 = this.positionInterpolator.pos(i, j == 0 ? 0.0F : p1.getPositionStep(j - 1));
+                Vector3d v2 = this.positionInterpolator.pos(i, j == p1.getStepCount() ? 1.0F : p1.getPositionStep(j));
                 builder.pos(lastMatrix, (float) v1.getX(), (float) v1.getY(), (float) v1.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
                 builder.pos(lastMatrix, (float) v2.getX(), (float) v2.getY(), (float) v2.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
 
@@ -739,9 +739,9 @@ public class PathManager
         Minecraft mc = Minecraft.getInstance();
 
         /* Setup the start and end vec of the ray trace */
-        double reachDistance = mc.player.getAttribute(PlayerEntity.REACH_DISTANCE).getValue();
-        Vec3d startVec = mc.player.getEyePosition(mc.getRenderPartialTicks());
-        Vec3d endVec = startVec.add(mc.player.getLookVec().scale(reachDistance));
+        double reachDistance = mc.player.getAttribute(ForgeMod.REACH_DISTANCE.get()).getValue();
+        Vector3d startVec = mc.player.getEyePosition(mc.getRenderPartialTicks());
+        Vector3d endVec = startVec.add(mc.player.getLookVec().scale(reachDistance));
 
         /* Creates axis aligned boxes for all path points then remove ones that aren't close enough to the player */
         double halfBoxSize = POINT_BOX_SIZE / 2;
@@ -753,7 +753,7 @@ public class PathManager
         PathPoint closestPoint = null;
         for(Pair<PathPoint, AxisAlignedBB> pair : pointPairs)
         {
-            Optional<Vec3d> optional = pair.getRight().rayTrace(startVec, endVec);
+            Optional<Vector3d> optional = pair.getRight().rayTrace(startVec, endVec);
             if(optional.isPresent())
             {
                 double distance = startVec.squareDistanceTo(optional.get());
