@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[31,)"
+loaderVersion="[35,)"
 issueTrackerURL="http://my.issue.tracker/"
 license="GPL3"
 
@@ -17,12 +17,12 @@ license="GPL3"
 [[dependencies.director]]
     modId="forge"
     mandatory=true
-    versionRange="[31.2.0,)"
+    versionRange="[35.1.0,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.director]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.15.2,)"
+    versionRange="[1.16.4,)"
     ordering="NONE"
     side="BOTH"
