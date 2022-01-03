@@ -621,7 +621,7 @@ public class PathManager
         }
 
         /* Stops invisible armor stands from rendering while playing a path */
-        if(this.isPlaying() && event.getEntity().isInvisible() && event.getEntity() instanceof ArmorStandEntity)
+        if(this.isPlaying() && event.getEntity() instanceof ArmorStandEntity)
         {
             try
             {
