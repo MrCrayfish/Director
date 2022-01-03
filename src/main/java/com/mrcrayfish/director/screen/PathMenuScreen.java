@@ -33,14 +33,14 @@ public class PathMenuScreen extends AbstractMenuScreen
         }).setDescription("director.button.visibility"));
 
         widgets.add(Icons.WRENCH.createButton(0, 0, button -> {
-            this.minecraft.displayGuiScreen(new PathSettingScreen(this));
+            this.minecraft.setScreen(new PathSettingScreen(this));
         }).setDescription("director.button.path_settings"));
 
         widgets.add(Spacer.of(5));
 
         widgets.add(Icons.BIN.createButton(0, 0, button -> {
             PathManager.instance().deletePath();
-            this.onClose();
+            this.removed();
         }).setDescription("director.button.delete_path"));
     }
 }

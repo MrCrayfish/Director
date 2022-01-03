@@ -12,14 +12,14 @@ import java.util.Collections;
 public class DirectorArmorStandModel extends ArmorStandModel
 {
     @Override
-    protected Iterable<ModelRenderer> getHeadParts()
+    protected Iterable<ModelRenderer> headParts()
     {
-        return PathManager.instance().isPlaying() ? Collections::emptyIterator : super.getHeadParts();
+        return PathManager.instance().isPlaying() ? Collections::emptyIterator : super.headParts();
     }
 
     @Override
-    protected Iterable<ModelRenderer> getBodyParts()
+    protected Iterable<ModelRenderer> bodyParts()
     {
-        return PathManager.instance().isPlaying() ? Collections::emptyIterator : super.getBodyParts();
+        return PathManager.instance().isPlaying() ? Collections::emptyIterator : super.bodyParts();
     }
 }

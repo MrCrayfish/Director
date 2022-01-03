@@ -30,19 +30,19 @@ public class EditPointScreen extends AbstractMenuScreen
 
         widgets.add(Icons.MARKER.createButton(0, 0, button -> {
             PathManager.instance().reposition(this.point);
-            this.onClose();
+            this.removed();
         }).setDescription("director.button.reposition"));
 
         widgets.add(Icons.PENCIL.createButton(0, 0, button -> {}).setDescription("director.button.change_values"));
 
         widgets.add(Icons.PLUS.createButton(0, 0, button -> {
             PathManager.instance().insertAfter(this.point);
-            this.onClose();
+            this.removed();
         }).setDescription("director.button.insert_after"));
 
         widgets.add(Icons.BIN.createButton(0, 0, button -> {
             PathManager.instance().delete(this.point);
-            this.onClose();
+            this.removed();
         }).setDescription("director.button.delete_waypoint"));
     }
 }

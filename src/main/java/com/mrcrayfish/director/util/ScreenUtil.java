@@ -36,7 +36,7 @@ public class ScreenUtil
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableBlend();
         RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
-        Minecraft.getInstance().getTextureManager().bindTexture(WINDOW_TEXTURE);
+        Minecraft.getInstance().getTextureManager().bind(WINDOW_TEXTURE);
         drawTexturedRect(x, y, 0, 0, 4, 4, 4, 4);                          /* Top left corner */
         drawTexturedRect(x + width - 4, y, 5, 0, 4, 4, 4, 4);              /* Top right corner */
         drawTexturedRect(x, y + height - 4, 0, 5, 4, 4, 4, 4);             /* Bottom left corner */
@@ -58,13 +58,13 @@ public class ScreenUtil
         float uScale = 1.0F / 256.0F;
         float vScale = 1.0F / 256.0F;
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
+        BufferBuilder buffer = tessellator.getBuilder();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        buffer.pos(x, y + height, 0).tex(u * uScale, (v + textureHeight) * vScale).endVertex();
-        buffer.pos(x + width, y + height, 0).tex((u + textureWidth) * uScale, (v + textureHeight) * vScale).endVertex();
-        buffer.pos(x + width, y, 0).tex((u + textureWidth) * uScale, v * vScale).endVertex();
-        buffer.pos(x, y, 0).tex(u * uScale, v * vScale).endVertex();
-        tessellator.draw();
+        buffer.vertex(x, y + height, 0).uv(u * uScale, (v + textureHeight) * vScale).endVertex();
+        buffer.vertex(x + width, y + height, 0).uv((u + textureWidth) * uScale, (v + textureHeight) * vScale).endVertex();
+        buffer.vertex(x + width, y, 0).uv((u + textureWidth) * uScale, v * vScale).endVertex();
+        buffer.vertex(x, y, 0).uv(u * uScale, v * vScale).endVertex();
+        tessellator.end();
     }
 
     public static boolean isMouseWithin(int mouseX, int mouseY, int x, int y, int width, int height)

@@ -33,19 +33,19 @@ public class PathPoint
 
     public void update(PlayerEntity player, PathManager manager)
     {
-        this.x = player.getPosX();
-        this.y = player.getPosY();
-        this.z = player.getPosZ();
-        this.yaw = player.rotationYaw;
-        this.pitch = player.rotationPitch;
+        this.x = player.getX();
+        this.y = player.getY();
+        this.z = player.getZ();
+        this.yaw = player.yRot;
+        this.pitch = player.xRot;
         this.roll = manager.getRoll();
-        this.fov = Minecraft.getInstance().gameSettings.fov + manager.getFov();
+        this.fov = Minecraft.getInstance().options.fov + manager.getFov();
         this.originalFov = manager.getFov();
     }
 
     public void copy(PlayerEntity player, PathManager manager)
     {
-        player.setPositionAndRotation(this.x, this.y, this.z, (float) this.yaw, (float) this.pitch);
+        player.absMoveTo(this.x, this.y, this.z, (float) this.yaw, (float) this.pitch);
         manager.setRoll(this.roll);
         manager.setFov(this.originalFov);
     }

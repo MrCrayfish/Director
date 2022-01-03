@@ -34,13 +34,13 @@ public abstract class AbstractMenuScreen extends Screen
     @Override
     protected void init()
     {
-        this.minecraft.player.sendStatusMessage(new StringTextComponent(""), true);
-        this.minecraft.player.setMotion(0, 0, 0);
+        this.minecraft.player.displayClientMessage(new StringTextComponent(""), true);
+        this.minecraft.player.setDeltaMovement(0, 0, 0);
 
         List<Widget> widgets = new ArrayList<>();
         if(this.parent != null)
         {
-            widgets.add(Icons.LEFT_ARROW.createButton(0, 0, button -> this.minecraft.displayGuiScreen(this.parent)).setDescription("director.button.back"));
+            widgets.add(Icons.LEFT_ARROW.createButton(0, 0, button -> this.minecraft.setScreen(this.parent)).setDescription("director.button.back"));
             widgets.add(Spacer.of(5));
         }
         this.loadWidgets(widgets);
@@ -74,7 +74,7 @@ public abstract class AbstractMenuScreen extends Screen
         /* Close any menu if can't play a path*/
         if(!PathManager.instance().isPlayerValidDirector())
         {
-            this.onClose();
+            this.removed();
         }
     }
 
@@ -92,7 +92,7 @@ public abstract class AbstractMenuScreen extends Screen
         Widget hoveredWidget = null;
         for(Widget widget : this.buttons)
         {
-            if(ScreenUtil.isMouseWithin(mouseX, mouseY, widget.x, widget.y, widget.getWidth(), widget.getHeightRealms()))
+            if(ScreenUtil.isMouseWithin(mouseX, mouseY, widget.x, widget.y, widget.getWidth(), widget.getHeight()))
             {
                 hoveredWidget = widget;
                 break;
@@ -102,9 +102,9 @@ public abstract class AbstractMenuScreen extends Screen
         if(hoveredWidget instanceof IconButton)
         {
             String descriptionKey = ((IconButton) hoveredWidget).getDescription();
-            String description = I18n.format(descriptionKey);
-            int width = this.minecraft.fontRenderer.getStringWidth(description);
-            drawString(matrixStack, this.minecraft.fontRenderer, description, this.width / 2 - width / 2, startY - 12, 0xFFFFFF);
+            String description = I18n.get(descriptionKey);
+            int width = this.minecraft.font.width(description);
+            drawString(matrixStack, this.minecraft.font, description, this.width / 2 - width / 2, startY - 12, 0xFFFFFF);
         }
     }
 }

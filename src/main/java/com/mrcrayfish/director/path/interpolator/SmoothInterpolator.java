@@ -39,7 +39,7 @@ public class SmoothInterpolator extends AbstractInterpolator
     public void loadEditPointWidgets(List<Widget> widgets, PathPoint point, @Nullable Screen parent)
     {
         widgets.add(Icons.SHARE.createButton(0, 0, button -> {
-            Minecraft.getInstance().displayGuiScreen(new AdjustCurveScreen(point, parent));
+            Minecraft.getInstance().setScreen(new AdjustCurveScreen(point, parent));
         }).setDescription("director.button.modify_curve"));
     }
 

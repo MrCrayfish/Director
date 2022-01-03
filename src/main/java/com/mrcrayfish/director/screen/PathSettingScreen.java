@@ -29,7 +29,7 @@ public class PathSettingScreen extends AbstractMenuScreen
     protected void loadWidgets(List<Widget> widgets)
     {
         widgets.add(new IconButton(0, 0, 20, 20, Icons.CLOCK, buttons -> {
-            this.minecraft.displayGuiScreen(new PathDurationScreen(this));
+            this.minecraft.setScreen(new PathDurationScreen(this));
         }).setDescription("director.button.path_duration"));
 
         widgets.add(Spacer.of(5));

@@ -32,13 +32,13 @@ public class EntityRenderUtil
      */
     private static void initReflection()
     {
-        handleRotationFloatMethod = ObfuscationReflectionHelper.findMethod(LivingRenderer.class, "func_77044_a", LivingEntity.class, float.class);
+        handleRotationFloatMethod = ObfuscationReflectionHelper.findMethod(LivingRenderer.class, "getBob", LivingEntity.class, float.class);
         handleRotationFloatMethod.setAccessible(true);
-        applyRotationsMethod = ObfuscationReflectionHelper.findMethod(LivingRenderer.class, "func_225621_a_", LivingEntity.class, MatrixStack.class, float.class, float.class, float.class);
+        applyRotationsMethod = ObfuscationReflectionHelper.findMethod(LivingRenderer.class, "setupRotations", LivingEntity.class, MatrixStack.class, float.class, float.class, float.class);
         applyRotationsMethod.setAccessible(true);
-        preRenderCallbackMethod = ObfuscationReflectionHelper.findMethod(LivingRenderer.class, "func_225620_a_", LivingEntity.class, MatrixStack.class, float.class);
+        preRenderCallbackMethod = ObfuscationReflectionHelper.findMethod(LivingRenderer.class, "scale", LivingEntity.class, MatrixStack.class, float.class);
         preRenderCallbackMethod.setAccessible(true);
-        layerRenderersField = ObfuscationReflectionHelper.findField(LivingRenderer.class, "field_177097_h");
+        layerRenderersField = ObfuscationReflectionHelper.findField(LivingRenderer.class, "layers");
         layerRenderersField.setAccessible(true);
     }
 
@@ -61,21 +61,21 @@ public class EntityRenderUtil
     {
         initReflection();
 
-        ArmorStandModel model = renderer.getEntityModel();
+        ArmorStandModel model = renderer.getModel();
 
-        matrixStack.push();
-        model.swingProgress = entityIn.getSwingProgress(partialTicks);
+        matrixStack.pushPose();
+        model.attackTime = entityIn.getAttackAnim(partialTicks);
 
-        boolean shouldSit = entityIn.isPassenger() && (entityIn.getRidingEntity() != null && entityIn.getRidingEntity().shouldRiderSit());
-        model.isSitting = shouldSit;
-        model.isChild = entityIn.isChild();
-        float yawOffset = MathHelper.interpolateAngle(partialTicks, entityIn.prevRenderYawOffset, entityIn.renderYawOffset);
-        float yawHead = MathHelper.interpolateAngle(partialTicks, entityIn.prevRotationYawHead, entityIn.rotationYawHead);
+        boolean shouldSit = entityIn.isPassenger() && (entityIn.getVehicle() != null && entityIn.getVehicle().shouldRiderSit());
+        model.riding = shouldSit;
+        model.young = entityIn.isBaby();
+        float yawOffset = MathHelper.rotLerp(partialTicks, entityIn.yBodyRotO, entityIn.yBodyRot);
+        float yawHead = MathHelper.rotLerp(partialTicks, entityIn.yHeadRotO, entityIn.yHeadRot);
         float deltaYaw = yawHead - yawOffset;
-        if(shouldSit && entityIn.getRidingEntity() instanceof LivingEntity)
+        if(shouldSit && entityIn.getVehicle() instanceof LivingEntity)
         {
-            LivingEntity livingentity = (LivingEntity) entityIn.getRidingEntity();
-            yawOffset = MathHelper.interpolateAngle(partialTicks, livingentity.prevRenderYawOffset, livingentity.renderYawOffset);
+            LivingEntity livingentity = (LivingEntity) entityIn.getVehicle();
+            yawOffset = MathHelper.rotLerp(partialTicks, livingentity.yBodyRotO, livingentity.yBodyRot);
             deltaYaw = yawHead - yawOffset;
 
             float wrappedDegrees = MathHelper.wrapDegrees(deltaYaw);
@@ -97,14 +97,14 @@ public class EntityRenderUtil
             deltaYaw = yawHead - yawOffset;
         }
 
-        float f6 = MathHelper.lerp(partialTicks, entityIn.prevRotationPitch, entityIn.rotationPitch);
+        float f6 = MathHelper.lerp(partialTicks, entityIn.xRotO, entityIn.xRot);
         if(entityIn.getPose() == Pose.SLEEPING)
         {
-            Direction direction = entityIn.getBedDirection();
+            Direction direction = entityIn.getBedOrientation();
             if(direction != null)
             {
                 float f4 = entityIn.getEyeHeight(Pose.STANDING) - 0.1F;
-                matrixStack.translate((double) ((float) (-direction.getXOffset()) * f4), 0.0D, (double) ((float) (-direction.getZOffset()) * f4));
+                matrixStack.translate((double) ((float) (-direction.getStepX()) * f4), 0.0D, (double) ((float) (-direction.getStepZ()) * f4));
             }
         }
 
@@ -117,9 +117,9 @@ public class EntityRenderUtil
         float f5 = 0.0F;
         if(!shouldSit && entityIn.isAlive())
         {
-            f8 = MathHelper.lerp(partialTicks, entityIn.prevLimbSwingAmount, entityIn.limbSwingAmount);
-            f5 = entityIn.limbSwing - entityIn.limbSwingAmount * (1.0F - partialTicks);
-            if(entityIn.isChild())
+            f8 = MathHelper.lerp(partialTicks, entityIn.animationSpeedOld, entityIn.animationSpeed);
+            f5 = entityIn.animationPosition - entityIn.animationSpeed * (1.0F - partialTicks);
+            if(entityIn.isBaby())
             {
                 f5 *= 3.0F;
             }
@@ -130,8 +130,8 @@ public class EntityRenderUtil
             }
         }
 
-        model.setLivingAnimations(entityIn, f5, f8, partialTicks);
-        model.setRotationAngles(entityIn, f5, f8, f7, deltaYaw, f6);
+        model.prepareMobModel(entityIn, f5, f8, partialTicks);
+        model.setupAnim(entityIn, f5, f8, f7, deltaYaw, f6);
 
         List<LayerRenderer<ArmorStandEntity, ArmorStandModel>> layers = (List<LayerRenderer<ArmorStandEntity, ArmorStandModel>>) layerRenderersField.get(renderer);
         if(!entityIn.isSpectator())
@@ -142,6 +142,6 @@ public class EntityRenderUtil
             }
         }
 
-        matrixStack.pop();
+        matrixStack.popPose();
     }
 }

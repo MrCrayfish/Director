@@ -12,6 +12,8 @@ import net.minecraft.util.text.StringTextComponent;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.client.gui.widget.button.Button.IPressable;
+
 /**
  * Author: MrCrayfish
  */
@@ -50,13 +52,13 @@ public class IconButton extends Button
     {
         super.renderButton(matrixStack, mouseX, mouseY, partialTicks);
         Minecraft minecraft = Minecraft.getInstance();
-        FontRenderer fontRenderer = minecraft.fontRenderer;
-        Minecraft.getInstance().getTextureManager().bindTexture(ICONS_TEXTURE);
+        FontRenderer fontRenderer = minecraft.font;
+        Minecraft.getInstance().getTextureManager().bind(ICONS_TEXTURE);
         int combinedWidth = this.icon != null ? 10 : 0;
-        String message = this.getMessage().getUnformattedComponentText().trim();
+        String message = this.getMessage().getContents().trim();
         if(!message.isEmpty())
         {
-            combinedWidth += fontRenderer.getStringWidth(message);
+            combinedWidth += fontRenderer.width(message);
             if(this.icon != null)
             {
                 combinedWidth += 4;
@@ -68,7 +70,7 @@ public class IconButton extends Button
         }
         if(!message.isEmpty())
         {
-            fontRenderer.drawStringWithShadow(matrixStack, message, this.x + this.width / 2 - combinedWidth / 2 + 10 + (this.icon == null ? 0 : 4), this.y + 6, 0xFFFFFF);
+            fontRenderer.drawShadow(matrixStack, message, this.x + this.width / 2 - combinedWidth / 2 + 10 + (this.icon == null ? 0 : 4), this.y + 6, 0xFFFFFF);
         }
     }
 }

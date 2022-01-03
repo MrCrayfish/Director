@@ -14,8 +14,8 @@ public class NumberWidget extends TextFieldWidget
 
     public NumberWidget(int width)
     {
-        super(Minecraft.getInstance().fontRenderer, 0, 0, width, 20, StringTextComponent.EMPTY);
-        this.setValidator(s -> {
+        super(Minecraft.getInstance().font, 0, 0, width, 20, StringTextComponent.EMPTY);
+        this.setFilter(s -> {
             try
             {
                 int value = Integer.parseInt(s);

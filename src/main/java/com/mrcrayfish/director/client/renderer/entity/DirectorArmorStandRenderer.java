@@ -15,6 +15,6 @@ public class DirectorArmorStandRenderer extends ArmorStandRenderer
     public DirectorArmorStandRenderer(EntityRendererManager manager)
     {
         super(manager);
-        this.entityModel = new DirectorArmorStandModel();
+        this.model = new DirectorArmorStandModel();
     }
 }

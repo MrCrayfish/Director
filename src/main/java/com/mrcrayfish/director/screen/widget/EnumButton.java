@@ -6,6 +6,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.Locale;
 
+import net.minecraft.client.gui.widget.button.Button.IPressable;
+
 /**
  * Author: MrCrayfish
  */

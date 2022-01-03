@@ -28,7 +28,7 @@ public class Director
 
     private void onClientSetup(FMLClientSetupEvent event)
     {
-        EntityRendererManager manager = Minecraft.getInstance().getRenderManager();
+        EntityRendererManager manager = Minecraft.getInstance().getEntityRenderDispatcher();
         manager.register(EntityType.ARMOR_STAND, new DirectorArmorStandRenderer(manager));
     }
 }

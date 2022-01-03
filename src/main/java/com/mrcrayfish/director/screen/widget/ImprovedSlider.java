@@ -5,6 +5,8 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.client.gui.widget.Slider;
 import org.lwjgl.glfw.GLFW;
 
+import net.minecraftforge.fml.client.gui.widget.Slider.ISlider;
+
 /**
  * A class that fixes a bug with the Forge slider. The slider won't stop sliding if the mouse
  * was released outside of the sliders area.
@@ -47,10 +49,10 @@ public class ImprovedSlider extends Slider
 
         /* Fixes the slider not being released when mouse is released outside of slider area */
         Minecraft mc = Minecraft.getInstance();
-        if(this.dragging && GLFW.glfwGetMouseButton(mc.getMainWindow().getHandle(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_RELEASE)
+        if(this.dragging && GLFW.glfwGetMouseButton(mc.getWindow().getWindow(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_RELEASE)
         {
-            double mouseX = mc.mouseHelper.getMouseX() * (double) mc.getMainWindow().getScaledWidth() / (double) mc.getMainWindow().getWidth();
-            double mouseY = mc.mouseHelper.getMouseY() * (double) mc.getMainWindow().getScaledHeight() / (double) mc.getMainWindow().getHeight();
+            double mouseX = mc.mouseHandler.xpos() * (double) mc.getWindow().getGuiScaledWidth() / (double) mc.getWindow().getScreenWidth();
+            double mouseY = mc.mouseHandler.ypos() * (double) mc.getWindow().getGuiScaledHeight() / (double) mc.getWindow().getScreenHeight();
             this.onRelease(mouseX, mouseY);
             this.dragging = false;
         }

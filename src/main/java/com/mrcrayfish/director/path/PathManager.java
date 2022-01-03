@@ -213,11 +213,11 @@ public class PathManager
         this.editingPoint = null;
         if(this.points.size() < 2)
         {
-            Minecraft.getInstance().player.sendMessage(new StringTextComponent("You need at least 2 points to play the path"),  Minecraft.getInstance().player.getUniqueID());
+            Minecraft.getInstance().player.sendMessage(new StringTextComponent("You need at least 2 points to play the path"),  Minecraft.getInstance().player.getUUID());
             return;
         }
-        Minecraft.getInstance().player.sendChatMessage("/gamemode spectator");
-        Minecraft.getInstance().player.abilities.isFlying = true;
+        Minecraft.getInstance().player.chat("/gamemode spectator");
+        Minecraft.getInstance().player.abilities.flying = true;
         this.currentPointIndex = 0;
         this.remainingPointDuration = this.points.get(0).getStepCount();
         this.playing = true;
@@ -347,7 +347,7 @@ public class PathManager
         if(this.isPlayerValidDirector() && event.getAction() == GLFW.GLFW_PRESS)
         {
             Minecraft mc = Minecraft.getInstance();
-            if(KEY_BIND_POINT.matchesKey(event.getKey(), event.getScanCode()))
+            if(KEY_BIND_POINT.matches(event.getKey(), event.getScanCode()))
             {
                 if(this.repositioning)
                 {
@@ -371,17 +371,17 @@ public class PathManager
                 }
                 this.updatePathPoints();
             }
-            else if(KEY_BIND_PLAY.matchesKey(event.getKey(), event.getScanCode()))
+            else if(KEY_BIND_PLAY.matches(event.getKey(), event.getScanCode()))
             {
                 this.play();
             }
-            else if(KEY_BIND_STOP.matchesKey(event.getKey(), event.getScanCode()))
+            else if(KEY_BIND_STOP.matches(event.getKey(), event.getScanCode()))
             {
                 this.stop();
             }
-            else if(KEY_BIND_SETTINGS.matchesKey(event.getKey(), event.getScanCode()))
+            else if(KEY_BIND_SETTINGS.matches(event.getKey(), event.getScanCode()))
             {
-                Minecraft.getInstance().displayGuiScreen(new PathMenuScreen());
+                Minecraft.getInstance().setScreen(new PathMenuScreen());
             }
         }
     }
@@ -435,7 +435,7 @@ public class PathManager
      */
     private void showMessage(String message)
     {
-        Minecraft.getInstance().player.sendStatusMessage(new TranslationTextComponent("director.format.message", message), true);
+        Minecraft.getInstance().player.displayClientMessage(new TranslationTextComponent("director.format.message", message), true);
     }
 
     /**
@@ -447,7 +447,7 @@ public class PathManager
      */
     private void showValue(String prefix, String value)
     {
-        Minecraft.getInstance().player.sendStatusMessage(new TranslationTextComponent("director.format.value", prefix, value), true);
+        Minecraft.getInstance().player.displayClientMessage(new TranslationTextComponent("director.format.value", prefix, value), true);
     }
 
     private float getPositionProgress(float partialTicks)
@@ -505,20 +505,20 @@ public class PathManager
             /* Updated the position of the player */
             Vector3d pos = this.positionInterpolator.pos(this.currentPointIndex, positionProgress);
             ClientPlayerEntity player = Minecraft.getInstance().player;
-            player.setPosition(pos.x, pos.y, pos.z);
-            player.prevPosX = pos.x;
-            player.prevPosY = pos.y;
-            player.prevPosZ = pos.z;
+            player.setPos(pos.x, pos.y, pos.z);
+            player.xo = pos.x;
+            player.yo = pos.y;
+            player.zo = pos.z;
 
             /* Updated the pitch of the player */
             float pitch = this.rotationInterpolator.pitch(this.currentPointIndex, rotationProgress);
-            player.rotationPitch = pitch;
-            player.prevRotationPitch = pitch;
+            player.xRot = pitch;
+            player.xRotO = pitch;
 
             /* Updated the yaw of the player */
             float yaw = this.rotationInterpolator.yaw(this.currentPointIndex, rotationProgress);
-            player.rotationYaw = yaw;
-            player.prevRotationYaw = yaw;
+            player.yRot = yaw;
+            player.yRotO = yaw;
         }
     }
 
@@ -549,7 +549,7 @@ public class PathManager
         else
         {
             double fov = this.prevFov + (this.fov - this.prevFov) * event.getRenderPartialTicks();
-            event.setFOV(Minecraft.getInstance().gameSettings.fov + fov);
+            event.setFOV(Minecraft.getInstance().options.fov + fov);
         }
     }
 
@@ -562,16 +562,16 @@ public class PathManager
         }
 
         MatrixStack matrixStack = event.getMatrixStack();
-        matrixStack.push();
+        matrixStack.pushPose();
 
         Minecraft mc = Minecraft.getInstance();
-        Vector3d view = mc.gameRenderer.getActiveRenderInfo().getProjectedView();
-        matrixStack.translate(-view.getX(), -view.getY(), -view.getZ());
+        Vector3d view = mc.gameRenderer.getMainCamera().getPosition();
+        matrixStack.translate(-view.x(), -view.y(), -view.z());
 
         AxisAlignedBB pointBox = new AxisAlignedBB(-0.10, -0.10, -0.10, 0.10, 0.10, 0.10);
-        IRenderTypeBuffer.Impl renderTypeBuffer = mc.getRenderTypeBuffers().getBufferSource();
-        IVertexBuilder builder = renderTypeBuffer.getBuffer(RenderType.getLines());
-        Matrix4f lastMatrix = matrixStack.getLast().getMatrix();
+        IRenderTypeBuffer.Impl renderTypeBuffer = mc.renderBuffers().bufferSource();
+        IVertexBuilder builder = renderTypeBuffer.getBuffer(RenderType.lines());
+        Matrix4f lastMatrix = matrixStack.last().pose();
         for(int i = 0; i < this.points.size() - 1; i++)
         {
             PathPoint p1 = this.points.get(i);
@@ -579,8 +579,8 @@ public class PathManager
             {
                 Vector3d v1 = this.positionInterpolator.pos(i, j == 0 ? 0.0F : p1.getPositionStep(j - 1));
                 Vector3d v2 = this.positionInterpolator.pos(i, j == p1.getStepCount() ? 1.0F : p1.getPositionStep(j));
-                builder.pos(lastMatrix, (float) v1.getX(), (float) v1.getY(), (float) v1.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
-                builder.pos(lastMatrix, (float) v2.getX(), (float) v2.getY(), (float) v2.getZ()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
+                builder.vertex(lastMatrix, (float) v1.x(), (float) v1.y(), (float) v1.z()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
+                builder.vertex(lastMatrix, (float) v2.x(), (float) v2.y(), (float) v2.z()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
 
                 //Renders the rotation path
                 /*Vec3d v3 = this.rotationInterpolator.instance().pos(i, j == 0 ? 0.0F : p1.getRotationStep(j - 1));
@@ -601,15 +601,15 @@ public class PathManager
         for(int i = 0; i < this.points.size(); i++)
         {
             PathPoint p1 = this.points.get(i);
-            matrixStack.push();
+            matrixStack.pushPose();
             matrixStack.translate(p1.getX(), p1.getY(), p1.getZ());
             float[] color = this.getPointColor(i);
-            WorldRenderer.drawBoundingBox(matrixStack, builder, pathBox, color[0], color[1], color[2], 1.0F);
-            matrixStack.pop();
+            WorldRenderer.renderLineBox(matrixStack, builder, pathBox, color[0], color[1], color[2], 1.0F);
+            matrixStack.popPose();
         }
-        Minecraft.getInstance().getRenderTypeBuffers().getBufferSource().finish(RenderType.getLines());
+        Minecraft.getInstance().renderBuffers().bufferSource().endBatch(RenderType.lines());
 
-        matrixStack.pop();
+        matrixStack.popPose();
     }
 
     @SubscribeEvent
@@ -656,7 +656,7 @@ public class PathManager
             return;
         }
 
-        long windowId = Minecraft.getInstance().getMainWindow().getHandle();
+        long windowId = Minecraft.getInstance().getWindow().getWindow();
         if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS)
         {
             this.fov -= event.getScrollDelta();
@@ -675,7 +675,7 @@ public class PathManager
     public void onRawMouseInput(InputEvent.RawMouseEvent event)
     {
         Minecraft mc = Minecraft.getInstance();
-        if(mc.loadingGui != null || mc.currentScreen != null || !mc.mouseHelper.isMouseGrabbed() || !this.isPlayerValidDirector())
+        if(mc.overlay != null || mc.screen != null || !mc.mouseHandler.isMouseGrabbed() || !this.isPlayerValidDirector())
         {
             return;
         }
@@ -687,14 +687,14 @@ public class PathManager
             {
                 this.repositioning = false;
                 this.editingPoint = null;
-                mc.displayGuiScreen(new EditPointScreen(hoveredPathPoint));
+                mc.setScreen(new EditPointScreen(hoveredPathPoint));
                 event.setCanceled(true);
             }
         }
 
         if(event.getAction() == GLFW.GLFW_PRESS && event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE)
         {
-            long windowId = Minecraft.getInstance().getMainWindow().getHandle();
+            long windowId = Minecraft.getInstance().getWindow().getWindow();
             if(GLFW.glfwGetKey(windowId, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS)
             {
                 this.fov = 0;
@@ -740,12 +740,12 @@ public class PathManager
 
         /* Setup the start and end vec of the ray trace */
         double reachDistance = mc.player.getAttribute(ForgeMod.REACH_DISTANCE.get()).getValue();
-        Vector3d startVec = mc.player.getEyePosition(mc.getRenderPartialTicks());
-        Vector3d endVec = startVec.add(mc.player.getLookVec().scale(reachDistance));
+        Vector3d startVec = mc.player.getEyePosition(mc.getFrameTime());
+        Vector3d endVec = startVec.add(mc.player.getLookAngle().scale(reachDistance));
 
         /* Creates axis aligned boxes for all path points then remove ones that aren't close enough to the player */
         double halfBoxSize = POINT_BOX_SIZE / 2;
-        List<Pair<PathPoint, AxisAlignedBB>> pointPairs = PathManager.instance().points.stream().map(p -> Pair.of(p, new AxisAlignedBB(p.getX(), p.getY(), p.getZ(), p.getX() + POINT_BOX_SIZE, p.getY() + POINT_BOX_SIZE, p.getZ() + POINT_BOX_SIZE).offset(-halfBoxSize, -halfBoxSize, -halfBoxSize))).collect(Collectors.toList());
+        List<Pair<PathPoint, AxisAlignedBB>> pointPairs = PathManager.instance().points.stream().map(p -> Pair.of(p, new AxisAlignedBB(p.getX(), p.getY(), p.getZ(), p.getX() + POINT_BOX_SIZE, p.getY() + POINT_BOX_SIZE, p.getZ() + POINT_BOX_SIZE).move(-halfBoxSize, -halfBoxSize, -halfBoxSize))).collect(Collectors.toList());
         pointPairs.removeIf(pair -> pair.getRight().getCenter().distanceTo(startVec) > reachDistance + 1);
 
         /* Ray trace and instance the closest path point */
@@ -753,10 +753,10 @@ public class PathManager
         PathPoint closestPoint = null;
         for(Pair<PathPoint, AxisAlignedBB> pair : pointPairs)
         {
-            Optional<Vector3d> optional = pair.getRight().rayTrace(startVec, endVec);
+            Optional<Vector3d> optional = pair.getRight().clip(startVec, endVec);
             if(optional.isPresent())
             {
-                double distance = startVec.squareDistanceTo(optional.get());
+                double distance = startVec.distanceToSqr(optional.get());
                 if(distance < closestDistance)
                 {
                     closestPoint = pair.getLeft();
