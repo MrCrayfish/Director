@@ -1,16 +1,17 @@
 package com.mrcrayfish.director.screen;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.director.Icons;
 import com.mrcrayfish.director.path.PathManager;
 import com.mrcrayfish.director.screen.widget.IconButton;
 import com.mrcrayfish.director.screen.widget.Spacer;
 import com.mrcrayfish.director.util.ScreenUtil;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
@@ -25,7 +26,7 @@ public abstract class AbstractMenuScreen extends Screen
     private Screen parent;
     private int contentWidth;
 
-    protected AbstractMenuScreen(ITextComponent titleIn, @Nullable Screen parent)
+    protected AbstractMenuScreen(Component titleIn, @Nullable Screen parent)
     {
         super(titleIn);
         this.parent = parent;
@@ -34,10 +35,10 @@ public abstract class AbstractMenuScreen extends Screen
     @Override
     protected void init()
     {
-        this.minecraft.player.displayClientMessage(new StringTextComponent(""), true);
+        this.minecraft.player.displayClientMessage(new TextComponent(""), true);
         this.minecraft.player.setDeltaMovement(0, 0, 0);
 
-        List<Widget> widgets = new ArrayList<>();
+        List<AbstractWidget> widgets = new ArrayList<>();
         if(this.parent != null)
         {
             widgets.add(Icons.LEFT_ARROW.createButton(0, 0, button -> this.minecraft.setScreen(this.parent)).setDescription("director.button.back"));
@@ -46,7 +47,7 @@ public abstract class AbstractMenuScreen extends Screen
         this.loadWidgets(widgets);
 
         int contentWidth = (widgets.size() - 1) * 2 + 4;
-        for(Widget widget : widgets)
+        for(AbstractWidget widget : widgets)
         {
             contentWidth += widget.getWidth();
         }
@@ -56,17 +57,16 @@ public abstract class AbstractMenuScreen extends Screen
         int startX = (this.width - dimensions.getLeft()) / 2;
         int startY = (this.height - dimensions.getRight()) - dimensions.getRight() / 2;
         int offset = 0;
-        for(int i = 0; i < widgets.size(); i++)
+        for(AbstractWidget widget : widgets)
         {
-            Widget widget = widgets.get(i);
             widget.x = startX + 4 + 2 + offset;
             widget.y = startY + 4 + 2;
             offset += widget.getWidth() + 2;
-            this.addButton(widget);
+            this.addRenderableWidget(widget);
         }
     }
 
-    protected abstract void loadWidgets(List<Widget> widgets);
+    protected abstract void loadWidgets(List<AbstractWidget> widgets);
 
     @Override
     public void tick()
@@ -79,7 +79,7 @@ public abstract class AbstractMenuScreen extends Screen
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
     {
         this.fillGradient(matrixStack, 0, this.height / 2, this.width, this.height, 0x00000000, 0xAA000000);
 
@@ -89,19 +89,22 @@ public abstract class AbstractMenuScreen extends Screen
         ScreenUtil.drawWindow(startX, startY, dimensions);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
 
-        Widget hoveredWidget = null;
-        for(Widget widget : this.buttons)
+        IconButton hoveredWidget = null;
+        for(GuiEventListener widget : this.children())
         {
-            if(ScreenUtil.isMouseWithin(mouseX, mouseY, widget.x, widget.y, widget.getWidth(), widget.getHeight()))
+            if(widget instanceof IconButton iconButton)
             {
-                hoveredWidget = widget;
-                break;
+                if(ScreenUtil.isMouseWithin(mouseX, mouseY, iconButton.x, iconButton.y, iconButton.getWidth(), iconButton.getHeight()))
+                {
+                    hoveredWidget = iconButton;
+                    break;
+                }
             }
         }
 
-        if(hoveredWidget instanceof IconButton)
+        if(hoveredWidget != null)
         {
-            String descriptionKey = ((IconButton) hoveredWidget).getDescription();
+            String descriptionKey = hoveredWidget.getDescription();
             String description = I18n.get(descriptionKey);
             int width = this.minecraft.font.width(description);
             drawString(matrixStack, this.minecraft.font, description, this.width / 2 - width / 2, startY - 12, 0xFFFFFF);

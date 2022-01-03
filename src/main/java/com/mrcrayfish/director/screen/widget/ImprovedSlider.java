@@ -1,11 +1,9 @@
 package com.mrcrayfish.director.screen.widget;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.fml.client.gui.widget.Slider;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraftforge.fmlclient.gui.widget.Slider;
 import org.lwjgl.glfw.GLFW;
-
-import net.minecraftforge.fml.client.gui.widget.Slider.ISlider;
 
 /**
  * A class that fixes a bug with the Forge slider. The slider won't stop sliding if the mouse
@@ -19,7 +17,7 @@ public class ImprovedSlider extends Slider
 
     public ImprovedSlider(int xPos, int yPos, int width, int height, String prefix, String suf, double minVal, double maxVal, double currentVal, boolean showDec, boolean drawStr, ISlider handler)
     {
-        super(xPos, yPos, width, height, new StringTextComponent(prefix), new StringTextComponent(suf), minVal, maxVal, currentVal, showDec, drawStr, b -> {});
+        super(xPos, yPos, width, height, new TextComponent(prefix), new TextComponent(suf), minVal, maxVal, currentVal, showDec, drawStr, b -> {});
         this.handler = handler;
     }
 

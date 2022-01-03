@@ -1,26 +1,26 @@
 package com.mrcrayfish.director.path;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Matrix4f;
 import com.mrcrayfish.director.path.interpolator.AbstractInterpolator;
 import com.mrcrayfish.director.path.interpolator.InterpolateType;
 import com.mrcrayfish.director.path.interpolator.PathType;
 import com.mrcrayfish.director.screen.EditPointScreen;
 import com.mrcrayfish.director.screen.PathMenuScreen;
 import com.mrcrayfish.director.util.EntityRenderUtil;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.item.ArmorStandEntity;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
@@ -28,7 +28,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fmlclient.registry.ClientRegistry;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.glfw.GLFW;
 
@@ -45,10 +45,10 @@ import java.util.stream.Collectors;
  */
 public class PathManager
 {
-    private static final KeyBinding KEY_BIND_PLAY = new KeyBinding("key.director.play", GLFW.GLFW_KEY_I, "key.categories.director");
-    private static final KeyBinding KEY_BIND_STOP = new KeyBinding("key.director.stop", GLFW.GLFW_KEY_O, "key.categories.director");
-    private static final KeyBinding KEY_BIND_SETTINGS = new KeyBinding("key.director.settings", GLFW.GLFW_KEY_U, "key.categories.director");
-    private static final KeyBinding KEY_BIND_POINT = new KeyBinding("key.director.point", GLFW.GLFW_KEY_P, "key.categories.director");
+    private static final KeyMapping KEY_BIND_PLAY = new KeyMapping("key.director.play", GLFW.GLFW_KEY_I, "key.categories.director");
+    private static final KeyMapping KEY_BIND_STOP = new KeyMapping("key.director.stop", GLFW.GLFW_KEY_O, "key.categories.director");
+    private static final KeyMapping KEY_BIND_SETTINGS = new KeyMapping("key.director.settings", GLFW.GLFW_KEY_U, "key.categories.director");
+    private static final KeyMapping KEY_BIND_POINT = new KeyMapping("key.director.point", GLFW.GLFW_KEY_P, "key.categories.director");
 
     private static final double POINT_BOX_SIZE = 0.5;
     private static final float[] START_POINT_COLOR = {1.0F, 0.18F, 0.0F};
@@ -213,11 +213,11 @@ public class PathManager
         this.editingPoint = null;
         if(this.points.size() < 2)
         {
-            Minecraft.getInstance().player.sendMessage(new StringTextComponent("You need at least 2 points to play the path"),  Minecraft.getInstance().player.getUUID());
+            Minecraft.getInstance().player.sendMessage(new TextComponent("You need at least 2 points to play the path"),  Minecraft.getInstance().player.getUUID());
             return;
         }
         Minecraft.getInstance().player.chat("/gamemode spectator");
-        Minecraft.getInstance().player.abilities.flying = true;
+        Minecraft.getInstance().player.getAbilities().flying = true;
         this.currentPointIndex = 0;
         this.remainingPointDuration = this.points.get(0).getStepCount();
         this.playing = true;
@@ -435,7 +435,7 @@ public class PathManager
      */
     private void showMessage(String message)
     {
-        Minecraft.getInstance().player.displayClientMessage(new TranslationTextComponent("director.format.message", message), true);
+        Minecraft.getInstance().player.displayClientMessage(new TranslatableComponent("director.format.message", message), true);
     }
 
     /**
@@ -447,7 +447,7 @@ public class PathManager
      */
     private void showValue(String prefix, String value)
     {
-        Minecraft.getInstance().player.displayClientMessage(new TranslationTextComponent("director.format.value", prefix, value), true);
+        Minecraft.getInstance().player.displayClientMessage(new TranslatableComponent("director.format.value", prefix, value), true);
     }
 
     private float getPositionProgress(float partialTicks)
@@ -461,7 +461,7 @@ public class PathManager
             {
                 s2 = p1.getPositionStep(p1.getStepCount() - (this.remainingPointDuration - 1));
             }
-            return MathHelper.clamp(s1 + (s2 - s1) * partialTicks, 0.0F, 1.0F);
+            return Mth.clamp(s1 + (s2 - s1) * partialTicks, 0.0F, 1.0F);
         }
         return 0.0F;
     }
@@ -477,7 +477,7 @@ public class PathManager
             {
                 s2 = p1.getRotationStep(p1.getStepCount() - (this.remainingPointDuration - 1));
             }
-            return MathHelper.clamp(s1 + (s2 - s1) * partialTicks, 0.0F, 1.0F);
+            return Mth.clamp(s1 + (s2 - s1) * partialTicks, 0.0F, 1.0F);
         }
         return 0.0F;
     }
@@ -503,8 +503,8 @@ public class PathManager
             float rotationProgress = this.getRotationProgress(event.renderTickTime);
 
             /* Updated the position of the player */
-            Vector3d pos = this.positionInterpolator.pos(this.currentPointIndex, positionProgress);
-            ClientPlayerEntity player = Minecraft.getInstance().player;
+            Vec3 pos = this.positionInterpolator.pos(this.currentPointIndex, positionProgress);
+            LocalPlayer player = Minecraft.getInstance().player;
             player.setPos(pos.x, pos.y, pos.z);
             player.xo = pos.x;
             player.yo = pos.y;
@@ -512,12 +512,12 @@ public class PathManager
 
             /* Updated the pitch of the player */
             float pitch = this.rotationInterpolator.pitch(this.currentPointIndex, rotationProgress);
-            player.xRot = pitch;
+            player.setXRot(pitch);
             player.xRotO = pitch;
 
             /* Updated the yaw of the player */
             float yaw = this.rotationInterpolator.yaw(this.currentPointIndex, rotationProgress);
-            player.yRot = yaw;
+            player.setYRot(yaw);
             player.yRotO = yaw;
         }
     }
@@ -561,26 +561,26 @@ public class PathManager
             return;
         }
 
-        MatrixStack matrixStack = event.getMatrixStack();
+        PoseStack matrixStack = event.getMatrixStack();
         matrixStack.pushPose();
 
         Minecraft mc = Minecraft.getInstance();
-        Vector3d view = mc.gameRenderer.getMainCamera().getPosition();
+        Vec3 view = mc.gameRenderer.getMainCamera().getPosition();
         matrixStack.translate(-view.x(), -view.y(), -view.z());
 
-        AxisAlignedBB pointBox = new AxisAlignedBB(-0.10, -0.10, -0.10, 0.10, 0.10, 0.10);
-        IRenderTypeBuffer.Impl renderTypeBuffer = mc.renderBuffers().bufferSource();
-        IVertexBuilder builder = renderTypeBuffer.getBuffer(RenderType.lines());
+        AABB pointBox = new AABB(-0.10, -0.10, -0.10, 0.10, 0.10, 0.10);
+        MultiBufferSource.BufferSource renderTypeBuffer = mc.renderBuffers().bufferSource();
+        VertexConsumer builder = renderTypeBuffer.getBuffer(RenderType.lines());
         Matrix4f lastMatrix = matrixStack.last().pose();
         for(int i = 0; i < this.points.size() - 1; i++)
         {
             PathPoint p1 = this.points.get(i);
             for(int j = 0; j <= p1.getStepCount(); j++)
             {
-                Vector3d v1 = this.positionInterpolator.pos(i, j == 0 ? 0.0F : p1.getPositionStep(j - 1));
-                Vector3d v2 = this.positionInterpolator.pos(i, j == p1.getStepCount() ? 1.0F : p1.getPositionStep(j));
-                builder.vertex(lastMatrix, (float) v1.x(), (float) v1.y(), (float) v1.z()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
-                builder.vertex(lastMatrix, (float) v2.x(), (float) v2.y(), (float) v2.z()).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
+                Vec3 v1 = this.positionInterpolator.pos(i, j == 0 ? 0.0F : p1.getPositionStep(j - 1));
+                Vec3 v2 = this.positionInterpolator.pos(i, j == p1.getStepCount() ? 1.0F : p1.getPositionStep(j));
+                builder.vertex(lastMatrix, (float) v1.x(), (float) v1.y(), (float) v1.z()).color(1.0F, 1.0F, 1.0F, 1.0F).normal(matrixStack.last().normal(), 1.0F, 0.0F, 0.0F).endVertex();
+                builder.vertex(lastMatrix, (float) v2.x(), (float) v2.y(), (float) v2.z()).color(1.0F, 1.0F, 1.0F, 1.0F).normal(matrixStack.last().normal(), 1.0F, 0.0F, 0.0F).endVertex();
 
                 //Renders the rotation path
                 /*Vec3d v3 = this.rotationInterpolator.instance().pos(i, j == 0 ? 0.0F : p1.getRotationStep(j - 1));
@@ -597,14 +597,14 @@ public class PathManager
         }
 
         double halfBoxSize = POINT_BOX_SIZE / 2;
-        AxisAlignedBB pathBox = new AxisAlignedBB(-halfBoxSize, -halfBoxSize, -halfBoxSize, halfBoxSize, halfBoxSize, halfBoxSize);
+        AABB pathBox = new AABB(-halfBoxSize, -halfBoxSize, -halfBoxSize, halfBoxSize, halfBoxSize, halfBoxSize);
         for(int i = 0; i < this.points.size(); i++)
         {
             PathPoint p1 = this.points.get(i);
             matrixStack.pushPose();
             matrixStack.translate(p1.getX(), p1.getY(), p1.getZ());
             float[] color = this.getPointColor(i);
-            WorldRenderer.renderLineBox(matrixStack, builder, pathBox, color[0], color[1], color[2], 1.0F);
+            LevelRenderer.renderLineBox(matrixStack, builder, pathBox, color[0], color[1], color[2], 1.0F);
             matrixStack.popPose();
         }
         Minecraft.getInstance().renderBuffers().bufferSource().endBatch(RenderType.lines());
@@ -621,11 +621,11 @@ public class PathManager
         }
 
         /* Stops invisible armor stands from rendering while playing a path */
-        if(this.isPlaying() && event.getEntity() instanceof ArmorStandEntity)
+        if(this.isPlaying() && event.getEntity() instanceof ArmorStand)
         {
             try
             {
-                EntityRenderUtil.renderAmourStand((ArmorStandEntity) event.getEntity(), event.getRenderer(), event.getMatrixStack(), event.getBuffers(), event.getLight(), event.getPartialRenderTick());
+                EntityRenderUtil.renderAmourStand((ArmorStand) event.getEntity(), event.getRenderer(), event.getMatrixStack(), event.getBuffers(), event.getLight(), event.getPartialRenderTick());
             }
             catch(InvocationTargetException | IllegalAccessException e)
             {
@@ -675,7 +675,7 @@ public class PathManager
     public void onRawMouseInput(InputEvent.RawMouseEvent event)
     {
         Minecraft mc = Minecraft.getInstance();
-        if(mc.overlay != null || mc.screen != null || !mc.mouseHandler.isMouseGrabbed() || !this.isPlayerValidDirector())
+        if(mc.getOverlay() != null || mc.screen != null || !mc.mouseHandler.isMouseGrabbed() || !this.isPlayerValidDirector())
         {
             return;
         }
@@ -740,20 +740,20 @@ public class PathManager
 
         /* Setup the start and end vec of the ray trace */
         double reachDistance = mc.player.getAttribute(ForgeMod.REACH_DISTANCE.get()).getValue();
-        Vector3d startVec = mc.player.getEyePosition(mc.getFrameTime());
-        Vector3d endVec = startVec.add(mc.player.getLookAngle().scale(reachDistance));
+        Vec3 startVec = mc.player.getEyePosition(mc.getFrameTime());
+        Vec3 endVec = startVec.add(mc.player.getLookAngle().scale(reachDistance));
 
         /* Creates axis aligned boxes for all path points then remove ones that aren't close enough to the player */
         double halfBoxSize = POINT_BOX_SIZE / 2;
-        List<Pair<PathPoint, AxisAlignedBB>> pointPairs = PathManager.instance().points.stream().map(p -> Pair.of(p, new AxisAlignedBB(p.getX(), p.getY(), p.getZ(), p.getX() + POINT_BOX_SIZE, p.getY() + POINT_BOX_SIZE, p.getZ() + POINT_BOX_SIZE).move(-halfBoxSize, -halfBoxSize, -halfBoxSize))).collect(Collectors.toList());
+        List<Pair<PathPoint, AABB>> pointPairs = PathManager.instance().points.stream().map(p -> Pair.of(p, new AABB(p.getX(), p.getY(), p.getZ(), p.getX() + POINT_BOX_SIZE, p.getY() + POINT_BOX_SIZE, p.getZ() + POINT_BOX_SIZE).move(-halfBoxSize, -halfBoxSize, -halfBoxSize))).collect(Collectors.toList());
         pointPairs.removeIf(pair -> pair.getRight().getCenter().distanceTo(startVec) > reachDistance + 1);
 
         /* Ray trace and instance the closest path point */
         double closestDistance = Double.MAX_VALUE;
         PathPoint closestPoint = null;
-        for(Pair<PathPoint, AxisAlignedBB> pair : pointPairs)
+        for(Pair<PathPoint, AABB> pair : pointPairs)
         {
-            Optional<Vector3d> optional = pair.getRight().clip(startVec, endVec);
+            Optional<Vec3> optional = pair.getRight().clip(startVec, endVec);
             if(optional.isPresent())
             {
                 double distance = startVec.distanceToSqr(optional.get());

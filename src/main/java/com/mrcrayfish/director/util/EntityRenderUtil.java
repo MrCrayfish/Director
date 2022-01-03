@@ -1,16 +1,16 @@
 package com.mrcrayfish.director.util;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.entity.LivingRenderer;
-import net.minecraft.client.renderer.entity.layers.LayerRenderer;
-import net.minecraft.client.renderer.entity.model.ArmorStandModel;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.item.ArmorStandEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.model.ArmorStandModel;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -32,13 +32,13 @@ public class EntityRenderUtil
      */
     private static void initReflection()
     {
-        handleRotationFloatMethod = ObfuscationReflectionHelper.findMethod(LivingRenderer.class, "getBob", LivingEntity.class, float.class);
+        handleRotationFloatMethod = ObfuscationReflectionHelper.findMethod(LivingEntityRenderer.class, "getBob", LivingEntity.class, float.class);
         handleRotationFloatMethod.setAccessible(true);
-        applyRotationsMethod = ObfuscationReflectionHelper.findMethod(LivingRenderer.class, "setupRotations", LivingEntity.class, MatrixStack.class, float.class, float.class, float.class);
+        applyRotationsMethod = ObfuscationReflectionHelper.findMethod(LivingEntityRenderer.class, "setupRotations", LivingEntity.class, PoseStack.class, float.class, float.class, float.class);
         applyRotationsMethod.setAccessible(true);
-        preRenderCallbackMethod = ObfuscationReflectionHelper.findMethod(LivingRenderer.class, "scale", LivingEntity.class, MatrixStack.class, float.class);
+        preRenderCallbackMethod = ObfuscationReflectionHelper.findMethod(LivingEntityRenderer.class, "scale", LivingEntity.class, PoseStack.class, float.class);
         preRenderCallbackMethod.setAccessible(true);
-        layerRenderersField = ObfuscationReflectionHelper.findField(LivingRenderer.class, "layers");
+        layerRenderersField = ObfuscationReflectionHelper.findField(LivingEntityRenderer.class, "layers");
         layerRenderersField.setAccessible(true);
     }
 
@@ -57,7 +57,7 @@ public class EntityRenderUtil
      * @throws IllegalAccessException    if it can't access one of the reflected methods or fields
      */
     @SuppressWarnings("unchecked")
-    public static void renderAmourStand(ArmorStandEntity entityIn, LivingRenderer<ArmorStandEntity, ArmorStandModel> renderer, MatrixStack matrixStack, IRenderTypeBuffer buffer, int packedLight, float partialTicks) throws InvocationTargetException, IllegalAccessException
+    public static void renderAmourStand(ArmorStand entityIn, LivingEntityRenderer<ArmorStand, ArmorStandModel> renderer, PoseStack matrixStack, MultiBufferSource buffer, int packedLight, float partialTicks) throws InvocationTargetException, IllegalAccessException
     {
         initReflection();
 
@@ -69,16 +69,16 @@ public class EntityRenderUtil
         boolean shouldSit = entityIn.isPassenger() && (entityIn.getVehicle() != null && entityIn.getVehicle().shouldRiderSit());
         model.riding = shouldSit;
         model.young = entityIn.isBaby();
-        float yawOffset = MathHelper.rotLerp(partialTicks, entityIn.yBodyRotO, entityIn.yBodyRot);
-        float yawHead = MathHelper.rotLerp(partialTicks, entityIn.yHeadRotO, entityIn.yHeadRot);
+        float yawOffset = Mth.rotLerp(partialTicks, entityIn.yBodyRotO, entityIn.yBodyRot);
+        float yawHead = Mth.rotLerp(partialTicks, entityIn.yHeadRotO, entityIn.yHeadRot);
         float deltaYaw = yawHead - yawOffset;
         if(shouldSit && entityIn.getVehicle() instanceof LivingEntity)
         {
             LivingEntity livingentity = (LivingEntity) entityIn.getVehicle();
-            yawOffset = MathHelper.rotLerp(partialTicks, livingentity.yBodyRotO, livingentity.yBodyRot);
+            yawOffset = Mth.rotLerp(partialTicks, livingentity.yBodyRotO, livingentity.yBodyRot);
             deltaYaw = yawHead - yawOffset;
 
-            float wrappedDegrees = MathHelper.wrapDegrees(deltaYaw);
+            float wrappedDegrees = Mth.wrapDegrees(deltaYaw);
             if(wrappedDegrees < -85.0F)
             {
                 wrappedDegrees = -85.0F;
@@ -97,7 +97,7 @@ public class EntityRenderUtil
             deltaYaw = yawHead - yawOffset;
         }
 
-        float f6 = MathHelper.lerp(partialTicks, entityIn.xRotO, entityIn.xRot);
+        float f6 = Mth.lerp(partialTicks, entityIn.xRotO, entityIn.getXRot());
         if(entityIn.getPose() == Pose.SLEEPING)
         {
             Direction direction = entityIn.getBedOrientation();
@@ -117,7 +117,7 @@ public class EntityRenderUtil
         float f5 = 0.0F;
         if(!shouldSit && entityIn.isAlive())
         {
-            f8 = MathHelper.lerp(partialTicks, entityIn.animationSpeedOld, entityIn.animationSpeed);
+            f8 = Mth.lerp(partialTicks, entityIn.animationSpeedOld, entityIn.animationSpeed);
             f5 = entityIn.animationPosition - entityIn.animationSpeed * (1.0F - partialTicks);
             if(entityIn.isBaby())
             {
@@ -133,10 +133,10 @@ public class EntityRenderUtil
         model.prepareMobModel(entityIn, f5, f8, partialTicks);
         model.setupAnim(entityIn, f5, f8, f7, deltaYaw, f6);
 
-        List<LayerRenderer<ArmorStandEntity, ArmorStandModel>> layers = (List<LayerRenderer<ArmorStandEntity, ArmorStandModel>>) layerRenderersField.get(renderer);
+        List<RenderLayer<ArmorStand, ArmorStandModel>> layers = (List<RenderLayer<ArmorStand, ArmorStandModel>>) layerRenderersField.get(renderer);
         if(!entityIn.isSpectator())
         {
-            for(LayerRenderer<ArmorStandEntity, ArmorStandModel> layer : layers)
+            for(RenderLayer<ArmorStand, ArmorStandModel> layer : layers)
             {
                 layer.render(matrixStack, buffer, packedLight, entityIn, f5, f8, partialTicks, f7, deltaYaw, f6);
             }

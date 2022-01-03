@@ -3,7 +3,7 @@ package com.mrcrayfish.director.path;
 import com.mrcrayfish.director.path.interpolator.InterpolateType;
 import com.mrcrayfish.director.path.interpolator.PathType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.EnumMap;
 
@@ -26,24 +26,24 @@ public class PathPoint
     private EnumMap<InterpolateType, IProperties> positionProperties = new EnumMap<>(InterpolateType.class);
     private EnumMap<InterpolateType, IProperties> rotationProperties = new EnumMap<>(InterpolateType.class);
 
-    public PathPoint(PlayerEntity player, PathManager manager)
+    public PathPoint(Player player, PathManager manager)
     {
         this.update(player, manager);
     }
 
-    public void update(PlayerEntity player, PathManager manager)
+    public void update(Player player, PathManager manager)
     {
         this.x = player.getX();
         this.y = player.getY();
         this.z = player.getZ();
-        this.yaw = player.yRot;
-        this.pitch = player.xRot;
+        this.yaw = player.getYRot();
+        this.pitch = player.getXRot();
         this.roll = manager.getRoll();
         this.fov = Minecraft.getInstance().options.fov + manager.getFov();
         this.originalFov = manager.getFov();
     }
 
-    public void copy(PlayerEntity player, PathManager manager)
+    public void copy(Player player, PathManager manager)
     {
         player.absMoveTo(this.x, this.y, this.z, (float) this.yaw, (float) this.pitch);
         manager.setRoll(this.roll);

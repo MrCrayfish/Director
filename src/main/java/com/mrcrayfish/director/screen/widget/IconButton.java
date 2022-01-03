@@ -1,18 +1,20 @@
 package com.mrcrayfish.director.screen.widget;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mrcrayfish.director.Director;
 import com.mrcrayfish.director.Icons;
 import com.mrcrayfish.director.util.ScreenUtil;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.TextComponent;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.client.gui.widget.button.Button.IPressable;
+import net.minecraft.client.gui.components.Button.OnPress;
 
 /**
  * Author: MrCrayfish
@@ -24,9 +26,9 @@ public class IconButton extends Button
     private Icons icon;
     private String description;
 
-    public IconButton(int x, int y, int width, int height, Icons icon, IPressable pressable)
+    public IconButton(int x, int y, int width, int height, Icons icon, OnPress pressable)
     {
-        super(x, y, width, height, StringTextComponent.EMPTY, pressable);
+        super(x, y, width, height, TextComponent.EMPTY, pressable);
         this.icon = icon;
     }
 
@@ -48,12 +50,14 @@ public class IconButton extends Button
     }
 
     @Override
-    public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+    public void renderButton(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
     {
         super.renderButton(matrixStack, mouseX, mouseY, partialTicks);
         Minecraft minecraft = Minecraft.getInstance();
-        FontRenderer fontRenderer = minecraft.font;
-        Minecraft.getInstance().getTextureManager().bind(ICONS_TEXTURE);
+        Font fontRenderer = minecraft.font;
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, ICONS_TEXTURE);
         int combinedWidth = this.icon != null ? 10 : 0;
         String message = this.getMessage().getContents().trim();
         if(!message.isEmpty())

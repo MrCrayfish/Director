@@ -1,8 +1,8 @@
 package com.mrcrayfish.director.path.interpolator;
 
 import com.mrcrayfish.director.path.PathPoint;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Author: MrCrayfish
@@ -15,14 +15,14 @@ public class LinearInterpolator extends AbstractInterpolator
     }
 
     @Override
-    public Vector3d pos(int index, float progress)
+    public Vec3 pos(int index, float progress)
     {
         PathPoint p1 = this.getPoint(index);
         PathPoint p2 = this.getPoint(index + 1);
         double pX = this.apply(p1.getX(), p2.getX(), progress);
         double pY = this.apply(p1.getY(), p2.getY(), progress);
         double pZ = this.apply(p1.getZ(), p2.getZ(), progress);
-        return new Vector3d(pX, pY, pZ);
+        return new Vec3(pX, pY, pZ);
     }
 
     @Override
@@ -38,8 +38,8 @@ public class LinearInterpolator extends AbstractInterpolator
     {
         PathPoint p1 = this.getPoint(index);
         PathPoint p2 = this.getPoint(index + 1);
-        float y1 = (float) MathHelper.wrapDegrees(p1.getYaw());
-        float y2 = this.applyTargetYawAdjustment(y1, (float) MathHelper.wrapDegrees(p2.getYaw()));
+        float y1 = (float) Mth.wrapDegrees(p1.getYaw());
+        float y2 = this.applyTargetYawAdjustment(y1, (float) Mth.wrapDegrees(p2.getYaw()));
         return (float) this.apply(y1, y2, progress);
     }
 
@@ -65,8 +65,8 @@ public class LinearInterpolator extends AbstractInterpolator
         double length = 0;
         for(int i = startIndex; i < endIndex; i++)
         {
-            Vector3d p1 = this.pos(i, 0F);
-            Vector3d p2 = this.pos(i + 1, 0F);
+            Vec3 p1 = this.pos(i, 0F);
+            Vec3 p2 = this.pos(i + 1, 0F);
             length += p1.distanceTo(p2);
         }
         return length;
@@ -80,6 +80,6 @@ public class LinearInterpolator extends AbstractInterpolator
 
     private double apply(double v1, double v2, float progress)
     {
-        return MathHelper.lerp(progress, v1, v2);
+        return Mth.lerp(progress, v1, v2);
     }
 }

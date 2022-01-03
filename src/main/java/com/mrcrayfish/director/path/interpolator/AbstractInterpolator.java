@@ -3,10 +3,10 @@ package com.mrcrayfish.director.path.interpolator;
 import com.mrcrayfish.director.path.IProperties;
 import com.mrcrayfish.director.path.PathManager;
 import com.mrcrayfish.director.path.PathPoint;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -39,7 +39,7 @@ public abstract class AbstractInterpolator
     protected PathPoint getPoint(int index)
     {
         List<PathPoint> points = PathManager.instance().getPoints();
-        return points.get(MathHelper.clamp(index, 0, points.size() - 1));
+        return points.get(Mth.clamp(index, 0, points.size() - 1));
     }
 
     protected int getPointCount()
@@ -47,7 +47,7 @@ public abstract class AbstractInterpolator
         return PathManager.instance().getPoints().size();
     }
 
-    public abstract Vector3d pos(int index, float progress);
+    public abstract Vec3 pos(int index, float progress);
 
     public abstract float pitch(int index, float progress);
 
@@ -61,7 +61,7 @@ public abstract class AbstractInterpolator
 
     public abstract float progress(int index, double distance, double length);
 
-    public void loadEditPointWidgets(List<Widget> widgets, PathPoint point, @Nullable Screen parent) {}
+    public void loadEditPointWidgets(List<AbstractWidget> widgets, PathPoint point, @Nullable Screen parent) {}
 
     public Supplier<IProperties> propertySupplier()
     {

@@ -5,10 +5,10 @@ import com.mrcrayfish.director.path.IProperties;
 import com.mrcrayfish.director.path.PathPoint;
 import com.mrcrayfish.director.screen.AdjustCurveScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -36,7 +36,7 @@ public class SmoothInterpolator extends AbstractInterpolator
     }
 
     @Override
-    public void loadEditPointWidgets(List<Widget> widgets, PathPoint point, @Nullable Screen parent)
+    public void loadEditPointWidgets(List<AbstractWidget> widgets, PathPoint point, @Nullable Screen parent)
     {
         widgets.add(Icons.SHARE.createButton(0, 0, button -> {
             Minecraft.getInstance().setScreen(new AdjustCurveScreen(point, parent));
@@ -44,7 +44,7 @@ public class SmoothInterpolator extends AbstractInterpolator
     }
 
     @Override
-    public Vector3d pos(int index, float progress)
+    public Vec3 pos(int index, float progress)
     {
         PathPoint p1 = this.getPoint(index - 1);
         PathPoint p2 = this.getPoint(index);
@@ -53,7 +53,7 @@ public class SmoothInterpolator extends AbstractInterpolator
         double pX = this.apply(index, p1.getX(), p2.getX(), p3.getX(), p4.getX(), p2, p3, progress);
         double pY = this.apply(index, p1.getY(), p2.getY(), p3.getY(), p4.getY(), p2, p3, progress);
         double pZ = this.apply(index, p1.getZ(), p2.getZ(), p3.getZ(), p4.getZ(), p2, p3, progress);
-        return new Vector3d(pX, pY, pZ);
+        return new Vec3(pX, pY, pZ);
     }
 
     @Override
@@ -73,10 +73,10 @@ public class SmoothInterpolator extends AbstractInterpolator
         PathPoint p2 = this.getPoint(index);
         PathPoint p3 = this.getPoint(index + 1);
         PathPoint p4 = this.getPoint(index + 2);
-        float y1 = (float) MathHelper.wrapDegrees(p1.getYaw());
-        float y2 = this.applyTargetYawAdjustment(y1, (float) MathHelper.wrapDegrees(p2.getYaw()));
-        float y3 = this.applyTargetYawAdjustment(y2, (float) MathHelper.wrapDegrees(p3.getYaw()));
-        float y4 = this.applyTargetYawAdjustment(y3, (float) MathHelper.wrapDegrees(p4.getYaw()));
+        float y1 = (float) Mth.wrapDegrees(p1.getYaw());
+        float y2 = this.applyTargetYawAdjustment(y1, (float) Mth.wrapDegrees(p2.getYaw()));
+        float y3 = this.applyTargetYawAdjustment(y2, (float) Mth.wrapDegrees(p3.getYaw()));
+        float y4 = this.applyTargetYawAdjustment(y3, (float) Mth.wrapDegrees(p4.getYaw()));
         return (float) this.apply(index, y1, y2, y3, y4, p2, p3, progress);
     }
 
@@ -119,8 +119,8 @@ public class SmoothInterpolator extends AbstractInterpolator
             {
                 float step = 1.0F / count;
                 float progress = (float) j / (float) count;
-                Vector3d p1 = this.pos(i, progress);
-                Vector3d p2 = this.pos(i, progress + step);
+                Vec3 p1 = this.pos(i, progress);
+                Vec3 p2 = this.pos(i, progress + step);
                 pathLength += p1.distanceTo(p2);
             }
         }
@@ -155,12 +155,12 @@ public class SmoothInterpolator extends AbstractInterpolator
         float tailProgress = 0;
         float headProgress = 0;
         double distance = startDistance;
-        Vector3d lastPos = this.pos(index, startProgress);
+        Vec3 lastPos = this.pos(index, startProgress);
         float step = (endProgress - startProgress) / 10F;
         for(int i = 0; i <= 10; i++)
         {
             float progress = i * step;
-            Vector3d pos = this.pos(index, startProgress + progress);
+            Vec3 pos = this.pos(index, startProgress + progress);
             distance += pos.distanceTo(lastPos);
             lastPos = pos;
             if(distance < targetDistance)

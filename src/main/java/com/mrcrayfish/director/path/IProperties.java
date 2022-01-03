@@ -1,19 +1,19 @@
 package com.mrcrayfish.director.path;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.util.INBTSerializable;
 
 /**
  * Author: MrCrayfish
  */
-public interface IProperties extends INBTSerializable<CompoundNBT>
+public interface IProperties extends INBTSerializable<CompoundTag>
 {
-    default CompoundNBT serializeNBT()
+    default CompoundTag serializeNBT()
     {
-        return new CompoundNBT();
+        return new CompoundTag();
     }
 
-    default void deserializeNBT(CompoundNBT tag)
+    default void deserializeNBT(CompoundTag tag)
     {
 
     }

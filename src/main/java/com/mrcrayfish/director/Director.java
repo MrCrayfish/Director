@@ -3,8 +3,9 @@ package com.mrcrayfish.director;
 import com.mrcrayfish.director.client.renderer.entity.DirectorArmorStandRenderer;
 import com.mrcrayfish.director.path.PathManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.entity.EntityType;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.world.entity.EntityType;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
@@ -26,9 +27,8 @@ public class Director
         bus.addListener(this::onClientSetup);
     }
 
-    private void onClientSetup(FMLClientSetupEvent event)
+    private void onClientSetup(EntityRenderersEvent.RegisterRenderers event)
     {
-        EntityRendererManager manager = Minecraft.getInstance().getEntityRenderDispatcher();
-        manager.register(EntityType.ARMOR_STAND, new DirectorArmorStandRenderer(manager));
+        event.registerEntityRenderer(EntityType.ARMOR_STAND, DirectorArmorStandRenderer::new);
     }
 }

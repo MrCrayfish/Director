@@ -7,9 +7,9 @@ import com.mrcrayfish.director.path.interpolator.PathType;
 import com.mrcrayfish.director.screen.widget.EnumButton;
 import com.mrcrayfish.director.screen.widget.IconButton;
 import com.mrcrayfish.director.screen.widget.Spacer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -21,12 +21,12 @@ public class PathSettingScreen extends AbstractMenuScreen
 {
     protected PathSettingScreen(@Nullable Screen parent)
     {
-        super(new TranslationTextComponent("director.title.path_settings"), parent);
+        super(new TranslatableComponent("director.title.path_settings"), parent);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    protected void loadWidgets(List<Widget> widgets)
+    protected void loadWidgets(List<AbstractWidget> widgets)
     {
         widgets.add(new IconButton(0, 0, 20, 20, Icons.CLOCK, buttons -> {
             this.minecraft.setScreen(new PathDurationScreen(this));

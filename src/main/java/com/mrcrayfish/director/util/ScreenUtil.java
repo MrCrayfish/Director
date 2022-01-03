@@ -1,12 +1,14 @@
 package com.mrcrayfish.director.util;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mrcrayfish.director.Director;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.ResourceLocation;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
@@ -33,10 +35,11 @@ public class ScreenUtil
      */
     public static void drawWindow(int x, int y, int width, int height)
     {
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, WINDOW_TEXTURE);
         RenderSystem.enableBlend();
         RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
-        Minecraft.getInstance().getTextureManager().bind(WINDOW_TEXTURE);
         drawTexturedRect(x, y, 0, 0, 4, 4, 4, 4);                          /* Top left corner */
         drawTexturedRect(x + width - 4, y, 5, 0, 4, 4, 4, 4);              /* Top right corner */
         drawTexturedRect(x, y + height - 4, 0, 5, 4, 4, 4, 4);             /* Bottom left corner */
@@ -57,14 +60,14 @@ public class ScreenUtil
     {
         float uScale = 1.0F / 256.0F;
         float vScale = 1.0F / 256.0F;
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuilder();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder buffer = tesselator.getBuilder();
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         buffer.vertex(x, y + height, 0).uv(u * uScale, (v + textureHeight) * vScale).endVertex();
         buffer.vertex(x + width, y + height, 0).uv((u + textureWidth) * uScale, (v + textureHeight) * vScale).endVertex();
         buffer.vertex(x + width, y, 0).uv((u + textureWidth) * uScale, v * vScale).endVertex();
         buffer.vertex(x, y, 0).uv(u * uScale, v * vScale).endVertex();
-        tessellator.end();
+        tesselator.end();
     }
 
     public static boolean isMouseWithin(int mouseX, int mouseY, int x, int y, int width, int height)

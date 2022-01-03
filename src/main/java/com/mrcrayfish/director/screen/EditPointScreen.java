@@ -4,8 +4,8 @@ import com.mrcrayfish.director.Icons;
 import com.mrcrayfish.director.path.PathManager;
 import com.mrcrayfish.director.path.PathPoint;
 import com.mrcrayfish.director.path.interpolator.PathType;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import java.util.List;
 
@@ -18,12 +18,12 @@ public class EditPointScreen extends AbstractMenuScreen
 
     public EditPointScreen(PathPoint point)
     {
-        super(new TranslationTextComponent("director.title.edit_point"), null);
+        super(new TranslatableComponent("director.title.edit_point"), null);
         this.point = point;
     }
 
     @Override
-    protected void loadWidgets(List<Widget> widgets)
+    protected void loadWidgets(List<AbstractWidget> widgets)
     {
         /* Load any widgets specific to the interpolator */
         PathManager.instance().getInterpolator(PathType.POSITION).loadEditPointWidgets(widgets, this.point, this);
