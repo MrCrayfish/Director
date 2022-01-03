@@ -14,14 +14,14 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 
-version = '1.16.5-0.1.1'
+version = '1.18.1-0.1.1'
 group = 'com.mrcrayfish' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'director'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 minecraft {
-    mappings channel: 'official', version: '1.17.1'
+    mappings channel: 'official', version: '1.18.1'
 
     runs {
         client {
@@ -61,7 +61,7 @@ minecraft {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.17.1-37.1.1'
+    minecraft 'net.minecraftforge:forge:1.18.1-39.0.10'
 }
 
 jar {

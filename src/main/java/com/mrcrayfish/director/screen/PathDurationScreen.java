@@ -5,7 +5,7 @@ import com.mrcrayfish.director.screen.widget.ImprovedSlider;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraftforge.fmlclient.gui.widget.Slider;
+import net.minecraftforge.client.gui.widget.Slider;
 
 import javax.annotation.Nullable;
 import java.util.List;

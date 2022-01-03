@@ -21,14 +21,14 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RenderLevelLastEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fmlclient.registry.ClientRegistry;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.glfw.GLFW;
 
@@ -527,41 +527,41 @@ public class PathManager
     {
         if(this.isPlaying())
         {
-            float progress = this.getRotationProgress((float) event.getRenderPartialTicks());
+            float progress = this.getRotationProgress((float) event.getPartialTicks());
             float roll = this.rotationInterpolator.roll(this.currentPointIndex, progress);
             event.setRoll(roll);
         }
         else
         {
-            event.setRoll((float) (this.prevRoll + (this.roll - this.prevRoll) * event.getRenderPartialTicks()));
+            event.setRoll((float) (this.prevRoll + (this.roll - this.prevRoll) * event.getPartialTicks()));
         }
     }
 
     @SubscribeEvent
-    public void fov(EntityViewRenderEvent.FOVModifier event)
+    public void fov(EntityViewRenderEvent.FieldOfView event)
     {
         if(this.isPlaying())
         {
-            float progress = this.getRotationProgress((float) event.getRenderPartialTicks());
+            float progress = this.getRotationProgress((float) event.getPartialTicks());
             double fov = this.rotationInterpolator.fov(this.currentPointIndex, progress);
             event.setFOV(fov);
         }
         else
         {
-            double fov = this.prevFov + (this.fov - this.prevFov) * event.getRenderPartialTicks();
+            double fov = this.prevFov + (this.fov - this.prevFov) * event.getPartialTicks();
             event.setFOV(Minecraft.getInstance().options.fov + fov);
         }
     }
 
     @SubscribeEvent
-    public void renderWorld(RenderWorldLastEvent event)
+    public void renderWorld(RenderLevelLastEvent event)
     {
         if(this.isPlaying() || !this.isVisible() || !this.isPlayerValidDirector())
         {
             return;
         }
 
-        PoseStack matrixStack = event.getMatrixStack();
+        PoseStack matrixStack = event.getPoseStack();
         matrixStack.pushPose();
 
         Minecraft mc = Minecraft.getInstance();
@@ -625,7 +625,7 @@ public class PathManager
         {
             try
             {
-                EntityRenderUtil.renderAmourStand((ArmorStand) event.getEntity(), event.getRenderer(), event.getMatrixStack(), event.getBuffers(), event.getLight(), event.getPartialRenderTick());
+                EntityRenderUtil.renderAmourStand((ArmorStand) event.getEntity(), event.getRenderer(), event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight(), event.getPartialTick());
             }
             catch(InvocationTargetException | IllegalAccessException e)
             {

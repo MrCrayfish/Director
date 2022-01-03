@@ -2,7 +2,7 @@ package com.mrcrayfish.director.screen.widget;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.TextComponent;
-import net.minecraftforge.fmlclient.gui.widget.Slider;
+import net.minecraftforge.client.gui.widget.Slider;
 import org.lwjgl.glfw.GLFW;
 
 /**
