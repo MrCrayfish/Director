@@ -344,9 +344,9 @@ public class PathManager
     @SubscribeEvent
     public void onKeyPress(InputEvent.KeyInputEvent event)
     {
-        if(this.isPlayerValidDirector() && event.getAction() == GLFW.GLFW_PRESS)
+        Minecraft mc = Minecraft.getInstance();
+        if(this.isPlayerValidDirector() && event.getAction() == GLFW.GLFW_PRESS && mc.screen == null)
         {
-            Minecraft mc = Minecraft.getInstance();
             if(KEY_BIND_POINT.matches(event.getKey(), event.getScanCode()))
             {
                 if(this.repositioning)
