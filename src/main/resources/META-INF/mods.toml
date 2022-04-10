@@ -17,12 +17,12 @@ license="GPL3"
 [[dependencies.director]]
     modId="forge"
     mandatory=true
-    versionRange="[39.0.10,)"
+    versionRange="[40.0.32,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.director]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.18.1,)"
+    versionRange="[1.18.2,)"
     ordering="NONE"
     side="BOTH"
