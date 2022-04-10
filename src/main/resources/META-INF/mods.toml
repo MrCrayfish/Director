@@ -5,7 +5,7 @@ license="GPL3"
 
 [[mods]]
     modId="director"
-    version="0.1.1"
+    version="0.1.2"
     displayName="Director"
     updateJSONURL="http://myurl.me/"
     displayURL="http://example.com/"
